@@ -627,17 +627,30 @@ body {
       <div id="step-game" style="display:none">
         <div class="game-topbar">
           <div class="game-pill">Score <strong id="play-score">0</strong></div>
-          <div class="game-pill" id="q-pill">Q <span id="q-counter">1/10</span></div>
+          <div class="game-pill">Q <span id="q-counter">1/10</span></div>
         </div>
         <div class="progress-track"><div class="progress-bar" id="play-progress" style="width:0%"></div></div>
         <div class="question-card">
           <div class="q-label" id="play-q-label">Question 1</div>
           <div class="q-text" id="play-q-text"></div>
         </div>
-        <div class="answers-grid" id="play-ans-grid"></div>
-        <div class="feedback-box fb-correct" id="play-feedback" style="display:none"></div>
-        <div class="feedback-box fb-wait" id="play-wait" style="display:none">Waiting for other players...</div>
-        <button class="action-btn" id="play-next" style="display:none" onclick="nextQuestion()">Next question →</button>
+
+        <!-- HOST VIEW: live leaderboard -->
+        <div id="host-game-view" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap;gap:8px">
+            <div class="section-title" style="margin:0;font-size:13px">Live leaderboard</div>
+            <div id="host-answered-count" style="font-size:13px;color:#6b6b8a;font-weight:600"></div>
+          </div>
+          <div id="host-leaderboard" class="player-list" style="margin-bottom:1.25rem"></div>
+          <button class="action-btn" id="play-next" style="display:none" onclick="nextQuestion()">Next question →</button>
+        </div>
+
+        <!-- PLAYER VIEW: answer buttons -->
+        <div id="player-game-view" style="display:none">
+          <div class="answers-grid" id="play-ans-grid"></div>
+          <div class="feedback-box fb-correct" id="play-feedback" style="display:none"></div>
+          <div class="feedback-box fb-wait" id="play-wait" style="display:none">Waiting for other players...</div>
+        </div>
       </div>
 
       <!-- Step: results -->
@@ -719,7 +732,7 @@ body {
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────
-const WS_URL = "wss://quizzly.kyklos.online"; // replace with your server URL
+const WS_URL = "wss://YOUR-APP-NAME.onrender.com"; // replace with your server URL
 
 const QUESTIONS = [
   {q:"What is the capital of France?",a:"Paris",opts:["Paris","London","Berlin","Madrid"]},
@@ -1051,8 +1064,8 @@ function renderLobby() {
   if (isHost) {
     document.getElementById("host-player-list").innerHTML = html;
     const btn = document.getElementById("start-btn");
-    btn.disabled = players.length < 2;
-    btn.textContent = players.length < 2 ? `Waiting for players (${players.length}/2 min)` : `Start game — ${players.length} players`;
+    btn.disabled = players.length < 1;
+    btn.textContent = players.length < 1 ? "Waiting for players..." : `Start game — ${players.length} player${players.length !== 1 ? "s" : ""}`;
   } else {
     document.getElementById("join-player-list").innerHTML = html;
   }
@@ -1061,9 +1074,10 @@ function renderLobby() {
 
 function startGame() { sendMsg({ type: "start", code: roomCode }); }
 
-// ── GAME ──────────────────────────────────────────────────────────────────
+// ── GAME ──────────────────────────────────────────────────────────────────────────
 function renderGameQ() {
   showStep("step-game");
+  document.getElementById("play-score").parentElement.style.display = isHost ? "none" : "";
   const q = room.questions[room.currentQ];
   const isNew = room.currentQ !== lastQ;
   if (isNew) { answered = false; lastQ = room.currentQ; }
@@ -1074,28 +1088,54 @@ function renderGameQ() {
   document.getElementById("play-progress").style.width = `${(room.currentQ / room.questions.length) * 100}%`;
   document.getElementById("play-score").textContent = myScore;
 
-  if (isNew) {
-    document.getElementById("play-feedback").style.display = "none";
-    document.getElementById("play-wait").style.display = "none";
-    document.getElementById("play-next").style.display = "none";
-    const grid = document.getElementById("play-ans-grid");
-    grid.innerHTML = "";
-    shuffle(q.opts).forEach(opt => {
-      const b = document.createElement("button");
-      b.className = "ans-btn"; b.textContent = opt;
-      b.onclick = () => submitAns(b, opt, q.a);
-      grid.appendChild(b);
-    });
-  }
+  if (isHost) {
+    document.getElementById("host-game-view").style.display = "block";
+    document.getElementById("player-game-view").style.display = "none";
+    renderHostLeaderboard();
+    const players = Object.values(room.players);
+    const answeredCount = players.filter(p => p.answered).length;
+    const allDone = answeredCount === players.length;
+    document.getElementById("host-answered-count").textContent = `${answeredCount} / ${players.length} answered`;
+    document.getElementById("play-next").style.display = allDone ? "block" : "none";
+  } else {
+    document.getElementById("host-game-view").style.display = "none";
+    document.getElementById("player-game-view").style.display = "block";
 
-  const allDone = Object.values(room.players).every(p => p.answered);
-  if (allDone && answered) {
-    document.getElementById("play-wait").style.display = "none";
-    if (isHost) document.getElementById("play-next").style.display = "block";
-    else { const w = document.getElementById("play-wait"); w.textContent = "Waiting for host..."; w.style.display = "block"; }
+    if (isNew) {
+      document.getElementById("play-feedback").style.display = "none";
+      document.getElementById("play-wait").style.display = "none";
+      const grid = document.getElementById("play-ans-grid");
+      grid.innerHTML = "";
+      shuffle(q.opts).forEach(opt => {
+        const b = document.createElement("button");
+        b.className = "ans-btn"; b.textContent = opt;
+        b.onclick = () => submitAns(b, opt, q.a);
+        grid.appendChild(b);
+      });
+    }
+
+    const allDone = Object.values(room.players).every(p => p.answered);
+    if (allDone && answered) {
+      document.getElementById("play-wait").style.display = "none";
+      const w = document.getElementById("play-wait");
+      w.textContent = "Waiting for host...";
+      w.style.display = "block";
+    }
   }
 }
 
+function renderHostLeaderboard() {
+  const players = Object.values(room.players).sort((a, b) => b.score - a.score);
+  const medals = ["🥇", "🥈", "🥉"];
+  document.getElementById("host-leaderboard").innerHTML = players.map((p, i) => `
+    <div class="player-row" style="border-color:${p.answered ? "#20c997" : "#e8e4ff"}">
+      <div style="width:28px;text-align:center;font-size:16px">${medals[i] || i + 1}</div>
+      ${av(p.name)}
+      <span class="player-name">${esc(p.name)}</span>
+      <span class="player-pts" style="font-weight:700;color:var(--indigo)">${p.score} pts</span>
+      <span style="font-size:11px;padding:3px 8px;border-radius:20px;font-weight:700;margin-left:4px;background:${p.answered ? "#d1f2eb" : "#f0eeff"};color:${p.answered ? "#0a6640" : "#9b99b8"}">${p.answered ? "✓" : "..."}</span>
+    </div>`).join("");
+}
 function submitAns(btn, chosen, correct) {
   if (answered) return;
   answered = true;
