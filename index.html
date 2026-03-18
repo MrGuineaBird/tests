@@ -534,34 +534,12 @@ body {
     </div>
 
     <div class="stat-row">
-      <div class="stat-card"><div class="stat-num">12</div><div class="stat-label">Games played</div></div>
-      <div class="stat-card"><div class="stat-num">847</div><div class="stat-label">Points earned</div></div>
-      <div class="stat-card"><div class="stat-num">71%</div><div class="stat-label">Avg accuracy</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-games">0</div><div class="stat-label">Games played</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-points">0</div><div class="stat-label">Points earned</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-acc">—</div><div class="stat-label">Avg accuracy</div></div>
     </div>
 
-    <div class="section-title">Game modes</div>
-    <div class="card-grid">
-      <div class="feature-card" onclick="goPlay()">
-        <div class="card-icon" style="background:#ebe9fd">🎯</div>
-        <h3>Classic</h3>
-        <p>Answer questions at your own pace. Great for learning.</p>
-      </div>
-      <div class="feature-card" onclick="goPlay()">
-        <div class="card-icon" style="background:#fff3cd">⚡</div>
-        <h3>Speed</h3>
-        <p>10 seconds per question. Bonus points for fast answers.</p>
-      </div>
-      <div class="feature-card" onclick="goPlay()">
-        <div class="card-icon" style="background:#ffe5e5">❤️</div>
-        <h3>Survival</h3>
-        <p>3 lives — one wrong answer too many and it's over.</p>
-      </div>
-      <div class="feature-card" onclick="goPlay()">
-        <div class="card-icon" style="background:#d1f2eb">🏆</div>
-        <h3>Multiplayer</h3>
-        <p>Host a room and battle friends in real time.</p>
-      </div>
-    </div>
+
   </div>
 
   <!-- PLAY PAGE -->
@@ -585,7 +563,7 @@ body {
         </div>
         <div id="form-host">
           <div class="form-group"><label>Your name</label><input type="text" id="host-name" placeholder="Enter your name" maxlength="20"></div>
-          <button class="action-btn" onclick="hostGame()">Create game</button>
+          <button class="action-btn" onclick="hostGame()">Create lobby</button>
           <div class="err" id="host-err"></div>
         </div>
         <div id="form-join" style="display:none">
@@ -596,19 +574,52 @@ body {
         </div>
       </div>
 
-      <!-- Step: lobby host -->
-      <div id="step-lobby-host" style="display:none">
-        <div class="lobby-code-box">
-          <div class="code-label">Room code</div>
+      <!-- Step: host setup (mode + set picker, shown AFTER lobby created) -->
+      <div id="step-host-setup" style="display:none">
+        <div class="page-header"><h2>Set up your game</h2><p>Choose a mode and question set, then share your code.</p></div>
+
+        <div class="lobby-code-box" style="margin-bottom:1.25rem">
+          <div class="code-label">Room code — share this now</div>
           <div class="lobby-code-big" id="lobby-code">----</div>
-          <p>Share this with your friends</p>
+          <p>Players can join while you set up</p>
         </div>
-        <div class="status-badge badge-waiting"><span class="badge-dot"></span>Waiting for players</div>
-        <div class="section-title" style="font-size:13px">Players joined</div>
-        <div class="player-list" id="host-player-list"></div>
+
+        <div class="section-title" style="font-size:13px;margin-bottom:0.75rem">Game mode</div>
+        <div class="mode-cards" style="margin-bottom:1.25rem">
+          <div class="mode-card selected" id="gm-classic" onclick="pickMode('classic')">
+            <div class="mode-emoji">🎯</div>
+            <div class="mode-name">Classic</div>
+            <div class="mode-desc">Answer at your own pace</div>
+          </div>
+          <div class="mode-card" id="gm-speed" onclick="pickMode('speed')">
+            <div class="mode-emoji">⚡</div>
+            <div class="mode-name">Speed</div>
+            <div class="mode-desc">10 seconds per question</div>
+          </div>
+          <div class="mode-card" id="gm-survival" onclick="pickMode('survival')">
+            <div class="mode-emoji">❤️</div>
+            <div class="mode-name">Survival</div>
+            <div class="mode-desc">3 lives only</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="font-size:13px;margin-bottom:0.75rem">Question set</div>
+        <div id="setup-set-picker" style="margin-bottom:1.25rem">
+          <div class="mode-card selected" id="set-default" onclick="pickSet('__default__')" style="text-align:left;display:flex;align-items:center;gap:12px;padding:1rem">
+            <div style="font-size:1.5rem">📋</div>
+            <div><div class="mode-name">Default set</div><div class="mode-desc">Built-in 10 questions</div></div>
+          </div>
+          <div id="setup-mysets-list" style="display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
+        </div>
+
+        <div class="section-title" style="font-size:13px;margin-bottom:0.5rem">Players joined</div>
+        <div class="player-list" id="host-player-list" style="margin-bottom:1.25rem"></div>
+
         <button class="action-btn" id="start-btn" onclick="startGame()" disabled>Start game</button>
         <button class="action-btn ghost" onclick="resetPlay()">Cancel</button>
       </div>
+
+
 
       <!-- Step: lobby join -->
       <div id="step-lobby-join" style="display:none">
@@ -732,7 +743,7 @@ body {
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────
-const WS_URL = "wss://quizzly.kyklos.online"; // replace with your server URL
+const WS_URL = "wss://YOUR-APP-NAME.onrender.com"; // replace with your server URL
 
 const QUESTIONS = [
   {q:"What is the capital of France?",a:"Paris",opts:["Paris","London","Berlin","Madrid"]},
@@ -996,6 +1007,7 @@ function esc(str) {
 // Init renders
 renderMySets();
 renderFavs();
+renderStats();
 
 document.getElementById("nav-creator").addEventListener("click", () => openCreator());
 
@@ -1018,8 +1030,13 @@ function handleMsg(msg) {
   if (msg.type === "hosted") {
     room = msg.room;
     isHost = true;
-    showStep("step-lobby-host");
+    showStep("step-host-setup");
     document.getElementById("lobby-code").textContent = roomCode;
+    selectedMode = "classic";
+    selectedSetId = "__default__";
+    populateSetPicker();
+    pickMode("classic");
+    pickSet("__default__");
     renderLobby();
     return;
   }
@@ -1047,13 +1064,41 @@ function pickRole(r) {
   document.getElementById("form-join").style.display = r === "join" ? "block" : "none";
 }
 
+let selectedMode = "classic";
+let selectedSetId = "__default__";
+
 function hostGame() {
   const name = document.getElementById("host-name").value.trim();
   if (!name) { document.getElementById("host-err").textContent = "Enter your name"; return; }
   myName = name; myId = genId(); isHost = true; myScore = 0; answered = false;
   roomCode = genCode();
-  const questions = shuffle(QUESTIONS).slice(0, 10);
-  sendMsg({ type: "host", code: roomCode, name, id: myId, questions });
+  // Send placeholder questions — will be replaced on start
+  sendMsg({ type: "host", code: roomCode, name, id: myId, questions: QUESTIONS });
+}
+
+function pickMode(m) {
+  selectedMode = m;
+  ["classic","speed","survival"].forEach(x => {
+    document.getElementById("gm-"+x).classList.toggle("selected", x === m);
+  });
+}
+
+function pickSet(id) {
+  selectedSetId = id;
+  document.getElementById("set-default").classList.toggle("selected", id === "__default__");
+  document.querySelectorAll(".setup-set-opt").forEach(el => {
+    el.classList.toggle("selected", el.dataset.setid === id);
+  });
+}
+
+function populateSetPicker() {
+  const sets = loadSets();
+  const list = document.getElementById("setup-mysets-list");
+  list.innerHTML = sets.map(s => `
+    <div class="mode-card setup-set-opt" data-setid="${s.id}" onclick="pickSet('${s.id}')" style="text-align:left;display:flex;align-items:center;gap:12px;padding:1rem">
+      <div style="font-size:1.5rem">${s.emoji||"📝"}</div>
+      <div><div class="mode-name">${esc(s.title)}</div><div class="mode-desc">${s.questions.length} questions</div></div>
+    </div>`).join("");
 }
 
 function joinGame() {
@@ -1076,17 +1121,29 @@ function renderLobby() {
   const players = Object.values(room.players);
   const html = players.map(p => `<div class="player-row">${av(p.name)}<span class="player-name">${p.name}${p.name===myName?" (you)":""}</span><span class="player-pts">${p.score} pts</span></div>`).join("");
   if (isHost) {
-    document.getElementById("host-player-list").innerHTML = html;
+    const listEl = document.getElementById("host-player-list");
+    if (listEl) listEl.innerHTML = html;
     const btn = document.getElementById("start-btn");
-    btn.disabled = players.length < 1;
-    btn.textContent = players.length < 1 ? "Waiting for players..." : `Start game — ${players.length} player${players.length !== 1 ? "s" : ""}`;
+    if (btn) {
+      btn.disabled = players.length < 1;
+      btn.textContent = players.length < 1 ? "Waiting for players..." : `Start game — ${players.length} player${players.length !== 1 ? "s" : ""}`;
+    }
   } else {
     document.getElementById("join-player-list").innerHTML = html;
   }
   if (room.status === "playing") renderGameQ();
 }
 
-function startGame() { sendMsg({ type: "start", code: roomCode }); }
+function startGame() {
+  let questions;
+  if (selectedSetId === "__default__") {
+    questions = shuffle(QUESTIONS).slice(0, 10);
+  } else {
+    const set = loadSets().find(s => s.id === selectedSetId);
+    questions = set ? shuffle(set.questions) : shuffle(QUESTIONS).slice(0, 10);
+  }
+  sendMsg({ type: "start", code: roomCode, questions, mode: selectedMode });
+}
 
 // ── GAME ──────────────────────────────────────────────────────────────────────────
 function renderGameQ() {
@@ -1186,17 +1243,44 @@ function renderResults() {
       <div class="rank-name">${p.name}${p.name===myName?" (you)":""}</div>
       <div class="rank-score">${p.score} pts</div>
     </div>`).join("");
+  // Save stats (only for players, not host)
+  if (!isHost) saveGameStats(myScore, room.questions ? room.questions.length : 10);
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────
+const STATS_KEY = "quizzly_stats";
+function loadStats() {
+  try { return JSON.parse(localStorage.getItem(STATS_KEY)) || {games:0,points:0,correct:0,total:0}; } catch { return {games:0,points:0,correct:0,total:0}; }
+}
+function saveGameStats(score, totalQs) {
+  const s = loadStats();
+  s.games += 1;
+  s.points += score;
+  s.correct += Math.round(score / 100);
+  s.total += totalQs;
+  localStorage.setItem(STATS_KEY, JSON.stringify(s));
+  renderStats();
+}
+function renderStats() {
+  const s = loadStats();
+  const gEl = document.getElementById("stat-games");
+  const pEl = document.getElementById("stat-points");
+  const aEl = document.getElementById("stat-acc");
+  if (gEl) gEl.textContent = s.games;
+  if (pEl) pEl.textContent = s.points.toLocaleString();
+  if (aEl) aEl.textContent = s.total > 0 ? Math.round((s.correct / s.total) * 100) + "%" : "—";
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
 function showStep(id) {
-  ["step-role","step-lobby-host","step-lobby-join","step-game","step-results"].forEach(s => {
+  ["step-role","step-host-setup","step-lobby-join","step-game","step-results"].forEach(s => {
     document.getElementById(s).style.display = s === id ? "block" : "none";
   });
 }
 
 function resetPlay() {
   myId=null;myName="";roomCode="";isHost=false;myScore=0;answered=false;room=null;lastQ=-1;
+  selectedMode="classic";selectedSetId="__default__";
   document.getElementById("host-name").value="";
   document.getElementById("join-name").value="";
   document.getElementById("join-code").value="";
