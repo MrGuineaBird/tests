@@ -1015,8 +1015,22 @@ function sendMsg(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(ob
 
 function handleMsg(msg) {
   if (msg.type === "error") { alert(msg.msg); return; }
-  if (msg.type === "hosted") { room = msg.room; showStep("step-lobby-host"); document.getElementById("lobby-code").textContent = roomCode; renderLobby(); }
-  if (msg.type === "joined") { room = msg.room; showStep("step-lobby-join"); document.getElementById("join-code-display").textContent = roomCode; renderLobby(); }
+  if (msg.type === "hosted") {
+    room = msg.room;
+    isHost = true;
+    showStep("step-lobby-host");
+    document.getElementById("lobby-code").textContent = roomCode;
+    renderLobby();
+    return;
+  }
+  if (msg.type === "joined") {
+    room = msg.room;
+    isHost = false;
+    showStep("step-lobby-join");
+    document.getElementById("join-code-display").textContent = roomCode;
+    renderLobby();
+    return;
+  }
   if (msg.type === "update") {
     room = msg.room;
     if (room.status === "lobby") renderLobby();
