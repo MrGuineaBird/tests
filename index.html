@@ -603,6 +603,26 @@ body {
           </div>
         </div>
 
+        <div class="section-title" style="font-size:13px;margin-bottom:0.75rem">Game duration</div>
+        <div class="mode-cards" style="margin-bottom:1.25rem;grid-template-columns:repeat(4,1fr)">
+          <div class="mode-card" id="dur-60" onclick="pickDuration(60)">
+            <div class="mode-emoji">⏱️</div>
+            <div class="mode-name">1 min</div>
+          </div>
+          <div class="mode-card selected" id="dur-120" onclick="pickDuration(120)">
+            <div class="mode-emoji">⏱️</div>
+            <div class="mode-name">2 min</div>
+          </div>
+          <div class="mode-card" id="dur-180" onclick="pickDuration(180)">
+            <div class="mode-emoji">⏱️</div>
+            <div class="mode-name">3 min</div>
+          </div>
+          <div class="mode-card" id="dur-300" onclick="pickDuration(300)">
+            <div class="mode-emoji">⏱️</div>
+            <div class="mode-name">5 min</div>
+          </div>
+        </div>
+
         <div class="section-title" style="font-size:13px;margin-bottom:0.75rem">Question set</div>
         <div id="setup-set-picker" style="margin-bottom:1.25rem">
           <div class="mode-card selected" id="set-default" onclick="pickSet('__default__')" style="text-align:left;display:flex;align-items:center;gap:12px;padding:1rem">
@@ -621,6 +641,20 @@ body {
 
 
 
+      <!-- Step: solo setup -->
+      <div id="step-solo-setup" style="display:none">
+        <div class="page-header"><h2 id="solo-set-title">Solo play</h2><p id="solo-set-desc">Questions loop until time runs out.</p></div>
+        <div class="section-title" style="font-size:13px;margin-bottom:0.75rem">Duration</div>
+        <div class="mode-cards" style="margin-bottom:1.25rem;grid-template-columns:repeat(4,1fr)">
+          <div class="mode-card" id="sdur-60" onclick="pickSoloDuration(60)"><div class="mode-emoji">⏱️</div><div class="mode-name">1 min</div></div>
+          <div class="mode-card selected" id="sdur-120" onclick="pickSoloDuration(120)"><div class="mode-emoji">⏱️</div><div class="mode-name">2 min</div></div>
+          <div class="mode-card" id="sdur-180" onclick="pickSoloDuration(180)"><div class="mode-emoji">⏱️</div><div class="mode-name">3 min</div></div>
+          <div class="mode-card" id="sdur-300" onclick="pickSoloDuration(300)"><div class="mode-emoji">⏱️</div><div class="mode-name">5 min</div></div>
+        </div>
+        <button class="action-btn teal" onclick="startSolo()">Play solo</button>
+        <button class="action-btn ghost" style="margin-top:8px" onclick="showStep('step-role');resetSolo()">Cancel</button>
+      </div>
+
       <!-- Step: lobby join -->
       <div id="step-lobby-join" style="display:none">
         <div class="lobby-code-box">
@@ -638,9 +672,10 @@ body {
       <div id="step-game" style="display:none">
         <div class="game-topbar">
           <div class="game-pill">Score <strong id="play-score">0</strong></div>
-          <div class="game-pill">Q <span id="q-counter">1/10</span></div>
+          <div class="game-pill" id="timer-pill" style="font-weight:800;min-width:70px;text-align:center">⏱ <span id="timer-display">2:00</span></div>
+          <div class="game-pill">Q <span id="q-counter">?</span></div>
         </div>
-        <div class="progress-track"><div class="progress-bar" id="play-progress" style="width:0%"></div></div>
+        <div class="progress-track"><div class="progress-bar" id="play-progress" style="width:0%;transition:width 1s linear"></div></div>
         <div class="question-card">
           <div class="q-label" id="play-q-label">Question 1</div>
           <div class="q-text" id="play-q-text"></div>
@@ -653,6 +688,7 @@ body {
             <div id="host-answered-count" style="font-size:13px;color:#6b6b8a;font-weight:600"></div>
           </div>
           <div id="host-leaderboard" class="player-list" style="margin-bottom:1.25rem"></div>
+          <div id="host-next-note" style="display:none;font-size:13px;color:#6b6b8a;text-align:center;padding:0.5rem">Auto-advancing in a moment...</div>
           <button class="action-btn" id="play-next" style="display:none" onclick="nextQuestion()">Next question →</button>
         </div>
 
@@ -661,6 +697,12 @@ body {
           <div class="answers-grid" id="play-ans-grid"></div>
           <div class="feedback-box fb-correct" id="play-feedback" style="display:none"></div>
           <div class="feedback-box fb-wait" id="play-wait" style="display:none">Waiting for other players...</div>
+        </div>
+
+        <!-- SOLO VIEW -->
+        <div id="solo-game-view" style="display:none">
+          <div class="answers-grid" id="solo-ans-grid"></div>
+          <div class="feedback-box" id="solo-feedback" style="display:none"></div>
         </div>
       </div>
 
@@ -690,7 +732,11 @@ body {
   <div id="page-mysets" class="page">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:12px">
       <div class="page-header" style="margin:0"><h2>My Sets</h2><p>Saved only in your browser — private to you.</p></div>
-      <button class="action-btn" style="width:auto;padding:0.65rem 1.25rem" onclick="openCreator()">+ New set</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="import-btn" class="action-btn ghost" style="width:auto;padding:0.65rem 1.25rem" onclick="document.getElementById('import-file').click()">&#8593; Import</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importSet(this)">
+        <button class="action-btn" style="width:auto;padding:0.65rem 1.25rem" onclick="openCreator()">+ New set</button>
+      </div>
     </div>
     <div id="mysets-grid" class="set-grid"></div>
     <div id="mysets-empty" style="text-align:center;padding:3rem 1rem;color:#6b6b8a;display:none">
@@ -743,7 +789,7 @@ body {
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────
-const WS_URL = "wss://quizzlyapi.kyklos.online"; // replace with your server URL
+const WS_URL = "wss://YOUR-APP-NAME.onrender.com"; // replace with your server URL
 
 const QUESTIONS = [
   {q:"What is the capital of France?",a:"Paris",opts:["Paris","London","Berlin","Madrid"]},
@@ -814,6 +860,8 @@ function renderMySets() {
   grid.innerHTML = sets.map((s, i) => {
     const isFav = favs.includes(s.id);
     const bg = bannerColors[i % bannerColors.length];
+    const favClass = isFav ? ' starred' : '';
+    const favIcon = isFav ? '&#9733;' : '&#9734;';
     return `
     <div class="set-card" style="cursor:default">
       <div class="set-card-banner" style="background:${bg}">${s.emoji || "📝"}</div>
@@ -822,7 +870,10 @@ function renderMySets() {
         <p>${s.questions.length} question${s.questions.length !== 1 ? "s" : ""}</p>
       </div>
       <div class="set-card-actions">
-        <button class="set-action-btn${isFav ? " starred" : ""}" onclick="toggleFav('${s.id}')">${isFav ? "★ Starred" : "☆ Star"}</button>
+        <button class="set-action-btn" onclick="openSoloSetup('${s.id}')">&#9654; Solo</button>
+        <button class="set-action-btn" onclick="copySoloLink('${s.id}', this)">&#128279; Link</button>
+        <button class="set-action-btn" onclick="exportSet('${s.id}')">&#8595; Export</button>
+        <button class="set-action-btn${favClass}" onclick="toggleFav('${s.id}')">${favIcon}</button>
         <button class="set-action-btn" onclick="editSet('${s.id}')">Edit</button>
         <button class="set-action-btn danger" onclick="deleteSet('${s.id}')">Delete</button>
       </div>
@@ -847,7 +898,10 @@ function renderFavs() {
         <p>${s.questions.length} question${s.questions.length !== 1 ? "s" : ""}</p>
       </div>
       <div class="set-card-actions">
-        <button class="set-action-btn starred" onclick="toggleFav('${s.id}')">★ Starred</button>
+        <button class="set-action-btn" onclick="openSoloSetup('${s.id}')">&#9654; Solo</button>
+        <button class="set-action-btn" onclick="copySoloLink('${s.id}', this)">&#128279; Link</button>
+        <button class="set-action-btn" onclick="exportSet('${s.id}')">&#8595; Export</button>
+        <button class="set-action-btn starred" onclick="toggleFav('${s.id}')">&#9733;</button>
         <button class="set-action-btn" onclick="editSet('${s.id}')">Edit</button>
       </div>
     </div>`).join("");
@@ -870,6 +924,57 @@ function deleteSet(id) {
   saveFavs(favs);
   renderMySets();
   renderFavs();
+}
+
+// ── EXPORT / IMPORT ──────────────────────────────────────────────────────────
+function exportSet(id) {
+  const set = loadSets().find(s => s.id === id);
+  if (!set) return;
+  const payload = { quizzly_set: true, version: 1, ...set };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = (set.title || "quizzly-set").replace(/[^a-z0-9]/gi, "_").toLowerCase() + ".json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importSet(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.quizzly_set) { alert("This doesn't look like a Quizzly set file."); return; }
+      if (!data.title || !Array.isArray(data.questions) || data.questions.length === 0) {
+        alert("Invalid set file — missing title or questions."); return;
+      }
+      for (const q of data.questions) {
+        if (!q.q || !q.a || !Array.isArray(q.opts) || q.opts.length < 2) {
+          alert("One or more questions in the file are invalid."); return;
+        }
+      }
+      const sets = loadSets();
+      const newSet = {
+        id: "set_" + Date.now(),
+        title: data.title,
+        emoji: data.emoji || "📋",
+        questions: data.questions,
+        created: Date.now(),
+      };
+      sets.push(newSet);
+      saveSets(sets);
+      renderMySets();
+      navTo("mysets", document.getElementById("nav-mysets"));
+      const btn = document.getElementById("import-btn");
+      if (btn) { btn.textContent = "✓ Imported!"; setTimeout(() => btn.innerHTML = "&#8593; Import", 2000); }
+    } catch (err) {
+      alert("Couldn't read the file. Make sure it's a valid Quizzly JSON export.");
+    }
+    input.value = "";
+  };
+  reader.readAsText(file);
 }
 
 // ── SET CREATOR ───────────────────────────────────────────────────────────
@@ -1048,11 +1153,35 @@ function handleMsg(msg) {
     renderLobby();
     return;
   }
+  if (msg.type === "tick") {
+    updateCountdown(msg.timeLeft);
+    return;
+  }
   if (msg.type === "update") {
     room = msg.room;
+    if (room.timeLeft !== undefined) updateCountdown(room.timeLeft);
     if (room.status === "lobby") renderLobby();
     if (room.status === "playing") renderGameQ();
     if (room.status === "done") renderResults();
+  }
+}
+
+function updateCountdown(secs) {
+  const el = document.getElementById("timer-display");
+  const pill = document.getElementById("timer-pill");
+  const bar = document.getElementById("play-progress");
+  if (!el) return;
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  el.textContent = m + ":" + String(s).padStart(2, "0");
+  if (pill) {
+    pill.style.color = secs <= 10 ? "#c0392b" : secs <= 30 ? "#856404" : "";
+    pill.style.borderColor = secs <= 10 ? "#A32D2D" : secs <= 30 ? "#BA7517" : "";
+  }
+  // Progress bar = time elapsed / total duration
+  if (bar && room && room.duration) {
+    const pct = Math.round(((room.duration - secs) / room.duration) * 100);
+    bar.style.width = pct + "%";
   }
 }
 
@@ -1066,6 +1195,15 @@ function pickRole(r) {
 
 let selectedMode = "classic";
 let selectedSetId = "__default__";
+let selectedDuration = 120;
+
+function pickDuration(d) {
+  selectedDuration = d;
+  [60,120,180,300].forEach(x => {
+    const el = document.getElementById("dur-"+x);
+    if (el) el.classList.toggle("selected", x === d);
+  });
+}
 
 function hostGame() {
   const name = document.getElementById("host-name").value.trim();
@@ -1137,12 +1275,12 @@ function renderLobby() {
 function startGame() {
   let questions;
   if (selectedSetId === "__default__") {
-    questions = shuffle(QUESTIONS).slice(0, 10);
+    questions = shuffle(QUESTIONS);
   } else {
     const set = loadSets().find(s => s.id === selectedSetId);
-    questions = set ? shuffle(set.questions) : shuffle(QUESTIONS).slice(0, 10);
+    questions = set ? [...set.questions] : [...QUESTIONS];
   }
-  sendMsg({ type: "start", code: roomCode, questions, mode: selectedMode });
+  sendMsg({ type: "start", code: roomCode, questions, mode: selectedMode, duration: selectedDuration });
 }
 
 // ── GAME ──────────────────────────────────────────────────────────────────────────
@@ -1155,8 +1293,8 @@ function renderGameQ() {
 
   document.getElementById("play-q-label").textContent = `Question ${room.currentQ + 1}`;
   document.getElementById("play-q-text").textContent = q.q;
-  document.getElementById("q-counter").textContent = `${room.currentQ + 1}/${room.questions.length}`;
-  document.getElementById("play-progress").style.width = `${(room.currentQ / room.questions.length) * 100}%`;
+  document.getElementById("q-counter").textContent = `${room.currentQ + 1}`;
+  // progress bar driven by countdown timer via updateCountdown()
   document.getElementById("play-score").textContent = myScore;
 
   if (isHost) {
@@ -1167,7 +1305,11 @@ function renderGameQ() {
     const answeredCount = players.filter(p => p.answered).length;
     const allDone = answeredCount === players.length;
     document.getElementById("host-answered-count").textContent = `${answeredCount} / ${players.length} answered`;
-    document.getElementById("play-next").style.display = allDone ? "block" : "none";
+    // In timed mode server auto-advances; in classic host clicks next
+    const isTimed = room.mode !== "classic" && room.mode !== "survival";
+    document.getElementById("play-next").style.display = (!isTimed && allDone) ? "block" : "none";
+    const noteEl = document.getElementById("host-next-note");
+    if (noteEl) noteEl.style.display = (isTimed && allDone) ? "block" : "none";
   } else {
     document.getElementById("host-game-view").style.display = "none";
     document.getElementById("player-game-view").style.display = "block";
@@ -1273,14 +1415,14 @@ function renderStats() {
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
 function showStep(id) {
-  ["step-role","step-host-setup","step-lobby-join","step-game","step-results"].forEach(s => {
+  ["step-role","step-host-setup","step-solo-setup","step-lobby-join","step-game","step-results"].forEach(s => {
     document.getElementById(s).style.display = s === id ? "block" : "none";
   });
 }
 
 function resetPlay() {
   myId=null;myName="";roomCode="";isHost=false;myScore=0;answered=false;room=null;lastQ=-1;
-  selectedMode="classic";selectedSetId="__default__";
+  selectedMode="classic";selectedSetId="__default__";selectedDuration=120;
   document.getElementById("host-name").value="";
   document.getElementById("join-name").value="";
   document.getElementById("join-code").value="";
@@ -1294,7 +1436,144 @@ function genId() { return Math.random().toString(36).slice(2,10); }
 function genCode() { return String(Math.floor(1000+Math.random()*9000)); }
 function shuffle(a) { return [...a].sort(()=>Math.random()-0.5); }
 
+// ── SOLO PLAY ──────────────────────────────────────────────────────────────────────────
+let soloSetId = null, soloDuration = 120, soloQuestions = [], soloQIdx = 0;
+let soloScore = 0, soloCorrect = 0, soloTotal = 0;
+let soloTimer = null, soloTimeLeft = 120, soloAnswered = false;
+
+function pickSoloDuration(d) {
+  soloDuration = d;
+  [60,120,180,300].forEach(x => {
+    const el = document.getElementById("sdur-"+x);
+    if (el) el.classList.toggle("selected", x === d);
+  });
+}
+
+function openSoloSetup(setId) {
+  soloSetId = setId;
+  soloDuration = 120; pickSoloDuration(120);
+  const set = (setId === "__default__")
+    ? { title: "Default set", questions: QUESTIONS }
+    : loadSets().find(s => s.id === setId);
+  if (!set) return;
+  document.getElementById("solo-set-title").textContent = set.title;
+  document.getElementById("solo-set-desc").textContent = set.questions.length + " questions — loops until time runs out";
+  navTo("play", null);
+  showStep("step-solo-setup");
+}
+
+function resetSolo() {
+  soloSetId = null; soloScore = 0; soloCorrect = 0; soloTotal = 0;
+  soloQIdx = 0; soloAnswered = false;
+  if (soloTimer) { clearInterval(soloTimer); soloTimer = null; }
+}
+
+function startSolo() {
+  const set = (!soloSetId || soloSetId === "__default__")
+    ? { questions: QUESTIONS }
+    : loadSets().find(s => s.id === soloSetId);
+  if (!set) return;
+  soloQuestions = shuffle([...set.questions]);
+  soloQIdx = 0; soloScore = 0; soloCorrect = 0; soloTotal = 0; soloAnswered = false;
+  soloTimeLeft = soloDuration;
+  showStep("step-game");
+  document.getElementById("host-game-view").style.display = "none";
+  document.getElementById("player-game-view").style.display = "none";
+  document.getElementById("solo-game-view").style.display = "block";
+  document.getElementById("play-score").textContent = 0;
+  document.getElementById("play-score").parentElement.style.display = "";
+  if (!room) room = { duration: soloDuration }; else room.duration = soloDuration;
+  renderSoloQ();
+  updateCountdown(soloTimeLeft);
+  if (soloTimer) clearInterval(soloTimer);
+  soloTimer = setInterval(() => {
+    soloTimeLeft = Math.max(0, soloTimeLeft - 1);
+    updateCountdown(soloTimeLeft);
+    if (soloTimeLeft <= 0) { clearInterval(soloTimer); soloTimer = null; endSolo(); }
+  }, 1000);
+}
+
+function renderSoloQ() {
+  const q = soloQuestions[soloQIdx];
+  document.getElementById("play-q-label").textContent = "Question " + (soloQIdx + 1);
+  document.getElementById("play-q-text").textContent = q.q;
+  document.getElementById("q-counter").textContent = soloQIdx + 1;
+  document.getElementById("solo-feedback").style.display = "none";
+  soloAnswered = false;
+  const grid = document.getElementById("solo-ans-grid");
+  grid.innerHTML = "";
+  shuffle(q.opts).forEach(opt => {
+    const b = document.createElement("button");
+    b.className = "ans-btn"; b.textContent = opt;
+    b.onclick = () => submitSoloAns(b, opt, q.a);
+    grid.appendChild(b);
+  });
+}
+
+function submitSoloAns(btn, chosen, correct) {
+  if (soloAnswered) return;
+  soloAnswered = true; soloTotal++;
+  const ok = chosen === correct;
+  btn.classList.add(ok ? "correct" : "wrong");
+  if (ok) { soloScore += 100; soloCorrect++; }
+  else document.querySelectorAll("#solo-ans-grid .ans-btn").forEach(b => { if (b.textContent === correct) b.classList.add("reveal"); });
+  document.querySelectorAll("#solo-ans-grid .ans-btn").forEach(b => b.disabled = true);
+  document.getElementById("play-score").textContent = soloScore;
+  const fb = document.getElementById("solo-feedback");
+  fb.className = "feedback-box " + (ok ? "fb-correct" : "fb-wrong");
+  fb.textContent = ok ? "✓ Correct! +100" : "✗ Wrong — " + correct;
+  fb.style.display = "block";
+  setTimeout(() => {
+    if (soloTimeLeft <= 0) return;
+    soloQIdx++;
+    if (soloQIdx >= soloQuestions.length) { soloQIdx = 0; soloQuestions = shuffle(soloQuestions); }
+    renderSoloQ();
+  }, 1000);
+}
+
+function endSolo() {
+  showStep("step-results");
+  const pct = soloTotal > 0 ? Math.round((soloCorrect / soloTotal) * 100) : 0;
+  document.getElementById("res-title").textContent = "Solo complete!";
+  document.getElementById("res-score").textContent = soloScore;
+  document.getElementById("res-sub").textContent = soloCorrect + " / " + soloTotal + " correct — " + pct + "% accuracy";
+  document.getElementById("standings-list").innerHTML = `
+    <div class="rank-row me">
+      <div class="rank-num">🏆</div>
+      <div class="avatar" style="background:#ebe9fd;color:#4f3de8">ME</div>
+      <div class="rank-name">You</div>
+      <div class="rank-score">${soloScore} pts</div>
+    </div>`;
+  saveGameStats(soloScore, soloTotal);
+  resetSolo();
+}
+
+// ── SHAREABLE LINK ──────────────────────────────────────────────────────────────
+function copySoloLink(setId, btn) {
+  const url = location.origin + location.pathname + "?set=" + setId;
+  navigator.clipboard.writeText(url).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = "Copied!";
+    setTimeout(() => btn.textContent = orig, 1500);
+  }).catch(() => prompt("Copy this link:", url));
+}
+
+function checkUrlSet() {
+  const params = new URLSearchParams(location.search);
+  const setId = params.get("set");
+  if (!setId) return;
+  if (setId === "__default__") { openSoloSetup("__default__"); return; }
+  const set = loadSets().find(s => s.id === setId);
+  if (set) {
+    openSoloSetup(setId);
+  } else {
+    navTo("play", null);
+    setTimeout(() => alert("This set wasn’t found in your browser. The link only works on the device where the set was created, or you need the set to be shared with you first."), 300);
+  }
+}
+
 connect();
+checkUrlSet();
 </script>
 </body>
 </html>
