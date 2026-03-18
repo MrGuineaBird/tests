@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quizzly</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --indigo: #4f3de8;
+  --indigo-dark: #3929c4;
+  --indigo-deeper: #2a1fa0;
+  --indigo-light: #ebe9fd;
+  --indigo-mid: #7c6ef0;
+  --teal: #0fbfad;
+  --teal-dark: #0a9e8f;
+  --yellow: #ffc926;
+  --coral: #ff6b6b;
+  --green: #3ecf8e;
+  --sidebar-w: 220px;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --font: 'Nunito', sans-serif;
+  --font-body: 'Nunito Sans', sans-serif;
+}
+
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font-body);
+  background: #f0eeff;
+  color: #1a1440;
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── SIDEBAR ─────────────────────────────────────────── */
+#sidebar {
+  width: var(--sidebar-w);
+  background: var(--indigo);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 1.5rem;
+  flex-shrink: 0;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+}
+
+.sidebar-logo {
+  padding: 1.5rem 1.25rem 1rem;
+  font-family: var(--font);
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+.sidebar-logo span { color: var(--yellow); }
+
+.play-btn {
+  margin: 0 1rem 1.25rem;
+  background: var(--teal);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  font-family: var(--font);
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.15s, transform 0.1s;
+  box-shadow: 0 4px 0 var(--teal-dark);
+}
+.play-btn:hover { background: #0fd4c0; }
+.play-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--teal-dark); }
+.play-btn svg { width: 18px; height: 18px; fill: #fff; }
+
+.nav-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 0.5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: rgba(255,255,255,0.75);
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+}
+.nav-item:hover { background: rgba(255,255,255,0.12); color: #fff; }
+.nav-item.active { background: rgba(255,255,255,0.18); color: #fff; }
+.nav-item svg { width: 20px; height: 20px; flex-shrink: 0; opacity: 0.85; }
+.nav-item.active svg { opacity: 1; }
+
+.sidebar-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.12);
+  margin: 0.75rem 1rem;
+}
+
+/* ── MAIN CONTENT ────────────────────────────────────── */
+#main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── PAGES ───────────────────────────────────────────── */
+.page { display: none; padding: 2rem; flex: 1; }
+.page.active { display: block; }
+
+/* ── HOME PAGE ───────────────────────────────────────── */
+.home-hero {
+  background: var(--indigo);
+  border-radius: var(--radius);
+  padding: 2.5rem 2rem;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+.home-hero::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 220px; height: 220px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+}
+.home-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; right: 80px;
+  width: 160px; height: 160px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 50%;
+}
+.home-hero h1 {
+  font-family: var(--font);
+  font-size: 2rem;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+.home-hero p { color: rgba(255,255,255,0.7); font-size: 15px; margin-bottom: 1.5rem; }
+.hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+.hero-btn {
+  padding: 0.7rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.1s, opacity 0.15s;
+}
+.hero-btn:active { transform: scale(0.97); }
+.hero-btn-primary { background: var(--yellow); color: #1a1440; box-shadow: 0 3px 0 #d4a000; }
+.hero-btn-primary:hover { opacity: 0.9; }
+.hero-btn-secondary { background: rgba(255,255,255,0.15); color: #fff; }
+.hero-btn-secondary:hover { background: rgba(255,255,255,0.22); }
+
+.section-title {
+  font-family: var(--font);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #1a1440;
+  margin-bottom: 1rem;
+}
+
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 2rem; }
+
+.feature-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: 2px solid transparent;
+}
+.feature-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(79,61,232,0.12); }
+.feature-card .card-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  margin-bottom: 0.75rem;
+}
+.feature-card h3 { font-family: var(--font); font-weight: 800; font-size: 0.95rem; margin-bottom: 4px; }
+.feature-card p { font-size: 12px; color: #6b6b8a; line-height: 1.5; }
+
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 2rem; }
+.stat-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  text-align: center;
+}
+.stat-card .stat-num { font-family: var(--font); font-size: 1.8rem; font-weight: 900; color: var(--indigo); }
+.stat-card .stat-label { font-size: 12px; color: #6b6b8a; font-weight: 600; margin-top: 2px; }
+
+/* ── PLAY PAGE ───────────────────────────────────────── */
+.play-page-inner { max-width: 560px; }
+
+.mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 1.5rem; }
+.mode-card {
+  background: #fff;
+  border: 2px solid #e8e4ff;
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+  text-align: center;
+}
+.mode-card:hover { border-color: var(--indigo-mid); transform: translateY(-2px); }
+.mode-card.selected { border-color: var(--indigo); background: var(--indigo-light); }
+.mode-card .mode-emoji { font-size: 2rem; margin-bottom: 8px; }
+.mode-card .mode-name { font-family: var(--font); font-weight: 800; font-size: 0.95rem; color: #1a1440; }
+.mode-card .mode-desc { font-size: 12px; color: #6b6b8a; margin-top: 3px; }
+
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; font-weight: 700; font-size: 13px; color: #4a4a6a; margin-bottom: 6px; font-family: var(--font); }
+.form-group input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e8e4ff;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-family: var(--font-body);
+  color: #1a1440;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-group input:focus { border-color: var(--indigo); }
+
+.action-btn {
+  width: 100%;
+  padding: 0.85rem;
+  background: var(--indigo);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--indigo-deeper);
+  transition: opacity 0.15s, transform 0.1s;
+  margin-top: 4px;
+}
+.action-btn:hover { opacity: 0.88; }
+.action-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--indigo-deeper); }
+.action-btn:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+.action-btn.teal { background: var(--teal); box-shadow: 0 4px 0 var(--teal-dark); }
+.action-btn.ghost { background: transparent; box-shadow: none; border: 2px solid #e8e4ff; color: #1a1440; margin-top: 8px; }
+.action-btn.ghost:hover { border-color: var(--indigo-mid); }
+
+.err { color: #d63384; font-size: 13px; font-weight: 600; margin-top: 6px; min-height: 18px; }
+
+/* ── LOBBY ───────────────────────────────────────────── */
+.lobby-code-box {
+  background: var(--indigo);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.lobby-code-box .code-label { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.lobby-code-big { font-family: var(--font); font-size: 3.5rem; font-weight: 900; color: #fff; letter-spacing: 0.15em; line-height: 1; }
+.lobby-code-box p { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 8px; }
+
+.status-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 700; font-family: var(--font);
+  margin-bottom: 1rem;
+}
+.badge-waiting { background: #fff3cd; color: #856404; }
+.badge-live { background: #d1f2eb; color: #0a6640; }
+@keyframes dotpulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.badge-dot { width: 7px; height: 7px; border-radius: 50%; }
+.badge-waiting .badge-dot { background: #f59f00; animation: dotpulse 1.4s ease-in-out infinite; }
+.badge-live .badge-dot { background: #20c997; }
+
+.player-list { display: flex; flex-direction: column; gap: 8px; margin: 0.75rem 0 1.25rem; }
+.player-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px;
+  background: #fff;
+  border-radius: var(--radius-sm);
+  border: 2px solid #e8e4ff;
+}
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font); font-size: 13px; font-weight: 800;
+  flex-shrink: 0;
+}
+.player-name { flex: 1; font-weight: 700; font-size: 14px; font-family: var(--font); }
+.player-pts { font-size: 13px; font-weight: 600; color: #6b6b8a; }
+
+/* ── GAME ────────────────────────────────────────────── */
+.game-topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 1rem; flex-wrap: wrap; gap: 8px;
+}
+.game-pill {
+  background: #fff;
+  border: 2px solid #e8e4ff;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1440;
+}
+.game-pill strong { color: var(--indigo); }
+
+.progress-track { background: #e8e4ff; border-radius: 6px; height: 8px; margin-bottom: 1.5rem; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--indigo); border-radius: 6px; transition: width 0.4s; }
+
+.question-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  margin-bottom: 1.25rem;
+  border: 2px solid #e8e4ff;
+}
+.q-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--indigo-mid); margin-bottom: 8px; font-family: var(--font); }
+.q-text { font-family: var(--font); font-size: 1.15rem; font-weight: 800; line-height: 1.5; color: #1a1440; }
+
+.answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+.ans-btn {
+  background: #fff;
+  border: 2px solid #e8e4ff;
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+  color: #1a1440;
+  transition: border-color 0.15s, transform 0.1s, background 0.15s;
+  line-height: 1.4;
+}
+.ans-btn:hover:not(:disabled) { border-color: var(--indigo); transform: translateY(-2px); background: var(--indigo-light); }
+.ans-btn:disabled { cursor: default; }
+.ans-btn.correct { background: #d1f2eb; border-color: #20c997; color: #0a6640; }
+.ans-btn.wrong { background: #ffe5e5; border-color: var(--coral); color: #c0392b; }
+.ans-btn.reveal { background: #d1f2eb; border-color: #20c997; color: #0a6640; }
+
+.feedback-box {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.fb-correct { background: #d1f2eb; color: #0a6640; }
+.fb-wrong { background: #ffe5e5; color: #c0392b; }
+.fb-wait { background: #fff; border: 2px solid #e8e4ff; color: #6b6b8a; }
+
+/* ── RESULTS ─────────────────────────────────────────── */
+.results-hero {
+  background: var(--indigo);
+  border-radius: var(--radius);
+  padding: 2rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.results-hero h2 { font-family: var(--font); font-size: 1.8rem; font-weight: 900; color: #fff; margin-bottom: 4px; }
+.results-hero p { color: rgba(255,255,255,0.7); font-size: 14px; }
+.results-hero .big-score { font-family: var(--font); font-size: 3rem; font-weight: 900; color: var(--yellow); margin: 0.5rem 0; }
+
+.standings { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; }
+.rank-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  background: #fff;
+  border-radius: var(--radius-sm);
+  border: 2px solid #e8e4ff;
+}
+.rank-row.me { border-color: var(--indigo); background: var(--indigo-light); }
+.rank-num { font-family: var(--font); font-size: 1.3rem; width: 32px; text-align: center; }
+.rank-name { flex: 1; font-family: var(--font); font-weight: 700; font-size: 14px; }
+.rank-score { font-family: var(--font); font-size: 13px; font-weight: 700; color: #6b6b8a; }
+
+/* ── DISCOVER / MY SETS pages ────────────────────────── */
+.page-header { margin-bottom: 1.5rem; }
+.page-header h2 { font-family: var(--font); font-size: 1.6rem; font-weight: 900; margin-bottom: 4px; }
+.page-header p { color: #6b6b8a; font-size: 14px; }
+
+.set-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.set-card {
+  background: #fff;
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: 2px solid transparent;
+}
+.set-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(79,61,232,0.12); }
+.set-card-banner { height: 80px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; }
+.set-card-body { padding: 1rem; }
+.set-card-body h4 { font-family: var(--font); font-weight: 800; font-size: 14px; margin-bottom: 3px; }
+.set-card-body p { font-size: 12px; color: #6b6b8a; }
+
+/* Set card actions */
+.set-card-actions { display:flex; gap:6px; padding: 0 1rem 1rem; }
+.set-action-btn { flex:1; padding:6px; border-radius:8px; border:1.5px solid #e8e4ff; background:transparent; font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; color:#4a4a6a; transition:background 0.15s, border-color 0.15s; }
+.set-action-btn:hover { background:var(--indigo-light); border-color:var(--indigo-mid); }
+.set-action-btn.danger:hover { background:#ffe5e5; border-color:var(--coral); color:#c0392b; }
+.set-action-btn.starred { color:#f59f00; border-color:#f59f00; background:#fff8e1; }
+
+/* Question builder card */
+.q-builder {
+  background:#fff;
+  border:2px solid #e8e4ff;
+  border-radius:var(--radius);
+  padding:1.25rem;
+}
+.q-builder-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+.q-builder-num { font-family:var(--font); font-weight:800; font-size:13px; color:var(--indigo); }
+.q-builder input { width:100%; padding:9px 12px; border:1.5px solid #e8e4ff; border-radius:8px; font-size:14px; font-family:var(--font-body); color:#1a1440; background:#f8f7ff; outline:none; margin-bottom:8px; transition:border-color 0.15s; }
+.q-builder input:focus { border-color:var(--indigo); background:#fff; }
+.q-builder input.correct-input { border-color:#20c997; background:#f0fdf8; }
+.opts-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:#9b99b8; margin-bottom:8px; font-family:var(--font); }
+.opts-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.opt-wrap { display:flex; align-items:center; gap:6px; }
+.opt-marker { width:20px; height:20px; border-radius:50%; border:1.5px solid #e8e4ff; display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; font-size:10px; transition:background 0.15s, border-color 0.15s; }
+.opt-marker.correct { background:#20c997; border-color:#20c997; color:#fff; }
+.opt-wrap input { margin:0; flex:1; }
+.remove-q-btn { background:none; border:none; cursor:pointer; color:#c0c0d0; font-size:18px; padding:2px 6px; border-radius:6px; transition:color 0.15s, background 0.15s; }
+.remove-q-btn:hover { color:#c0392b; background:#ffe5e5; }
+
+/* ── RESPONSIVE ──────────────────────────────────────── */
+@media (max-width: 600px) {
+  :root { --sidebar-w: 0px; }
+  #sidebar { transform: translateX(-220px); transition: transform 0.25s; }
+  #sidebar.open { transform: translateX(0); width: 220px; }
+  #main { margin-left: 0; }
+  .mobile-header { display: flex !important; }
+  .answers-grid { grid-template-columns: 1fr; }
+  .mode-cards { grid-template-columns: 1fr; }
+  .stat-row { grid-template-columns: 1fr; }
+}
+.mobile-header {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 1rem;
+  background: var(--indigo);
+  color: #fff;
+  font-family: var(--font);
+  font-weight: 900;
+  font-size: 1.2rem;
+}
+.hamburger { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; padding: 4px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-logo">Quiz<span>zly</span></div>
+  <button class="play-btn" onclick="goPlay()">
+    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    Play
+  </button>
+  <div class="nav-section">
+    <div class="nav-item active" onclick="navTo('home', this)" id="nav-home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </div>
+    <div class="nav-item" onclick="navTo('discover', this)" id="nav-discover">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Discover
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="nav-item" onclick="navTo('mysets', this)" id="nav-mysets">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      My Sets
+    </div>
+    <div class="nav-item" onclick="navTo('creator', this)" id="nav-creator">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Set Creator
+    </div>
+    <div class="nav-item" onclick="navTo('favorites', this)" id="nav-favorites">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Favorites
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="mobile-header">
+    <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+    Quizzly
+  </div>
+
+  <!-- HOME PAGE -->
+  <div id="page-home" class="page active">
+    <div class="home-hero">
+      <h1>Welcome back! 👋</h1>
+      <p>Ready to quiz? Host a game or jump into one with a code.</p>
+      <div class="hero-btns">
+        <button class="hero-btn hero-btn-primary" onclick="goPlay()">▶ Play now</button>
+        <button class="hero-btn hero-btn-secondary" onclick="navTo('discover', document.getElementById('nav-discover'))">Discover sets</button>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-num">12</div><div class="stat-label">Games played</div></div>
+      <div class="stat-card"><div class="stat-num">847</div><div class="stat-label">Points earned</div></div>
+      <div class="stat-card"><div class="stat-num">71%</div><div class="stat-label">Avg accuracy</div></div>
+    </div>
+
+    <div class="section-title">Game modes</div>
+    <div class="card-grid">
+      <div class="feature-card" onclick="goPlay()">
+        <div class="card-icon" style="background:#ebe9fd">🎯</div>
+        <h3>Classic</h3>
+        <p>Answer questions at your own pace. Great for learning.</p>
+      </div>
+      <div class="feature-card" onclick="goPlay()">
+        <div class="card-icon" style="background:#fff3cd">⚡</div>
+        <h3>Speed</h3>
+        <p>10 seconds per question. Bonus points for fast answers.</p>
+      </div>
+      <div class="feature-card" onclick="goPlay()">
+        <div class="card-icon" style="background:#ffe5e5">❤️</div>
+        <h3>Survival</h3>
+        <p>3 lives — one wrong answer too many and it's over.</p>
+      </div>
+      <div class="feature-card" onclick="goPlay()">
+        <div class="card-icon" style="background:#d1f2eb">🏆</div>
+        <h3>Multiplayer</h3>
+        <p>Host a room and battle friends in real time.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAY PAGE -->
+  <div id="page-play" class="page">
+    <div class="play-page-inner">
+
+      <!-- Step: choose host/join -->
+      <div id="step-role">
+        <div class="page-header"><h2>Play</h2><p>Host a new game or join one with a code.</p></div>
+        <div class="mode-cards">
+          <div class="mode-card selected" id="card-host" onclick="pickRole('host')">
+            <div class="mode-emoji">🎮</div>
+            <div class="mode-name">Host a game</div>
+            <div class="mode-desc">Create a room & share a code</div>
+          </div>
+          <div class="mode-card" id="card-join" onclick="pickRole('join')">
+            <div class="mode-emoji">🙋</div>
+            <div class="mode-name">Join a game</div>
+            <div class="mode-desc">Enter a room code to jump in</div>
+          </div>
+        </div>
+        <div id="form-host">
+          <div class="form-group"><label>Your name</label><input type="text" id="host-name" placeholder="Enter your name" maxlength="20"></div>
+          <button class="action-btn" onclick="hostGame()">Create game</button>
+          <div class="err" id="host-err"></div>
+        </div>
+        <div id="form-join" style="display:none">
+          <div class="form-group"><label>Your name</label><input type="text" id="join-name" placeholder="Enter your name" maxlength="20"></div>
+          <div class="form-group"><label>Room code</label><input type="text" id="join-code" placeholder="e.g. 4829" maxlength="6" style="letter-spacing:0.1em"></div>
+          <button class="action-btn teal" onclick="joinGame()">Join game</button>
+          <div class="err" id="join-err"></div>
+        </div>
+      </div>
+
+      <!-- Step: lobby host -->
+      <div id="step-lobby-host" style="display:none">
+        <div class="lobby-code-box">
+          <div class="code-label">Room code</div>
+          <div class="lobby-code-big" id="lobby-code">----</div>
+          <p>Share this with your friends</p>
+        </div>
+        <div class="status-badge badge-waiting"><span class="badge-dot"></span>Waiting for players</div>
+        <div class="section-title" style="font-size:13px">Players joined</div>
+        <div class="player-list" id="host-player-list"></div>
+        <button class="action-btn" id="start-btn" onclick="startGame()" disabled>Start game</button>
+        <button class="action-btn ghost" onclick="resetPlay()">Cancel</button>
+      </div>
+
+      <!-- Step: lobby join -->
+      <div id="step-lobby-join" style="display:none">
+        <div class="lobby-code-box">
+          <div class="code-label">Joined room</div>
+          <div class="lobby-code-big" id="join-code-display">----</div>
+          <p>Waiting for the host to start...</p>
+        </div>
+        <div class="status-badge badge-waiting"><span class="badge-dot"></span>Waiting for host</div>
+        <div class="section-title" style="font-size:13px">Players in room</div>
+        <div class="player-list" id="join-player-list"></div>
+        <button class="action-btn ghost" onclick="resetPlay()">Leave game</button>
+      </div>
+
+      <!-- Step: in game -->
+      <div id="step-game" style="display:none">
+        <div class="game-topbar">
+          <div class="game-pill">Score <strong id="play-score">0</strong></div>
+          <div class="game-pill" id="q-pill">Q <span id="q-counter">1/10</span></div>
+        </div>
+        <div class="progress-track"><div class="progress-bar" id="play-progress" style="width:0%"></div></div>
+        <div class="question-card">
+          <div class="q-label" id="play-q-label">Question 1</div>
+          <div class="q-text" id="play-q-text"></div>
+        </div>
+        <div class="answers-grid" id="play-ans-grid"></div>
+        <div class="feedback-box fb-correct" id="play-feedback" style="display:none"></div>
+        <div class="feedback-box fb-wait" id="play-wait" style="display:none">Waiting for other players...</div>
+        <button class="action-btn" id="play-next" style="display:none" onclick="nextQuestion()">Next question →</button>
+      </div>
+
+      <!-- Step: results -->
+      <div id="step-results" style="display:none">
+        <div class="results-hero">
+          <h2 id="res-title">Game over!</h2>
+          <div class="big-score" id="res-score">0</div>
+          <p id="res-sub"></p>
+        </div>
+        <div class="section-title" style="font-size:13px">Final standings</div>
+        <div class="standings" id="standings-list"></div>
+        <button class="action-btn" onclick="resetPlay()">Play again</button>
+        <button class="action-btn ghost" onclick="navTo('home', document.getElementById('nav-home'))">Back to home</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DISCOVER PAGE -->
+  <div id="page-discover" class="page">
+    <div class="page-header"><h2>Discover</h2><p>Explore question sets made by the community.</p></div>
+    <div class="set-grid" id="discover-grid"></div>
+  </div>
+
+  <!-- MY SETS PAGE -->
+  <div id="page-mysets" class="page">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:12px">
+      <div class="page-header" style="margin:0"><h2>My Sets</h2><p>Saved only in your browser — private to you.</p></div>
+      <button class="action-btn" style="width:auto;padding:0.65rem 1.25rem" onclick="openCreator()">+ New set</button>
+    </div>
+    <div id="mysets-grid" class="set-grid"></div>
+    <div id="mysets-empty" style="text-align:center;padding:3rem 1rem;color:#6b6b8a;display:none">
+      <div style="font-size:3rem;margin-bottom:1rem">📝</div>
+      <div style="font-family:var(--font);font-weight:800;font-size:1.1rem;margin-bottom:6px">No sets yet</div>
+      <div style="font-size:14px">Hit "New set" to create your first question set.</div>
+    </div>
+  </div>
+
+  <!-- FAVORITES PAGE -->
+  <div id="page-favorites" class="page">
+    <div class="page-header"><h2>Favorites</h2><p>Sets you've starred for quick access.</p></div>
+    <div id="favs-grid" class="set-grid"></div>
+    <div id="favs-empty" style="text-align:center;padding:3rem 1rem;color:#6b6b8a;display:none">
+      <div style="font-size:3rem;margin-bottom:1rem">⭐</div>
+      <div style="font-family:var(--font);font-weight:800;font-size:1.1rem;margin-bottom:6px">No favorites yet</div>
+      <div style="font-size:14px">Star any set from My Sets to save it here.</div>
+    </div>
+  </div>
+
+  <!-- SET CREATOR PAGE -->
+  <div id="page-creator" class="page">
+    <div class="page-header"><h2 id="creator-title">New set</h2><p>Stored locally in your browser. Only you can see it.</p></div>
+    <div style="max-width:600px">
+      <div class="form-group">
+        <label>Set title</label>
+        <input type="text" id="set-title" placeholder="e.g. World Capitals" maxlength="60">
+      </div>
+      <div class="form-group">
+        <label>Emoji icon</label>
+        <input type="text" id="set-emoji" placeholder="🌍" maxlength="2" style="width:80px">
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:1.5rem 0 0.75rem">
+        <div class="section-title" style="margin:0">Questions</div>
+        <button class="action-btn" style="width:auto;padding:0.55rem 1rem;font-size:13px" onclick="addQuestion()">+ Add question</button>
+      </div>
+
+      <div id="questions-list" style="display:flex;flex-direction:column;gap:14px;margin-bottom:1.5rem"></div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="action-btn" style="flex:1;min-width:120px" onclick="saveSet()">Save set</button>
+        <button class="action-btn ghost" style="flex:1;min-width:120px" onclick="cancelCreator()">Cancel</button>
+      </div>
+      <div class="err" id="creator-err"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────
+const WS_URL = "wss://YOUR-APP-NAME.onrender.com"; // replace with your server URL
+
+const QUESTIONS = [
+  {q:"What is the capital of France?",a:"Paris",opts:["Paris","London","Berlin","Madrid"]},
+  {q:"How many sides does a hexagon have?",a:"6",opts:["5","6","7","8"]},
+  {q:"Which planet is closest to the sun?",a:"Mercury",opts:["Venus","Earth","Mercury","Mars"]},
+  {q:"What is 12 × 12?",a:"144",opts:["124","132","144","148"]},
+  {q:"Who wrote Romeo and Juliet?",a:"Shakespeare",opts:["Dickens","Shakespeare","Austen","Chaucer"]},
+  {q:"What is the chemical symbol for gold?",a:"Au",opts:["Go","Gd","Au","Ag"]},
+  {q:"How many continents are there?",a:"7",opts:["5","6","7","8"]},
+  {q:"What is the fastest land animal?",a:"Cheetah",opts:["Lion","Horse","Cheetah","Falcon"]},
+  {q:"In what year did World War II end?",a:"1945",opts:["1942","1943","1944","1945"]},
+  {q:"What gas do plants absorb from the air?",a:"CO₂",opts:["Oxygen","CO₂","Nitrogen","Hydrogen"]}
+];
+
+const DISCOVER_SETS = [
+  {emoji:"🌍",bg:"#e8f4fd",title:"World Geography",count:"10 questions"},
+  {emoji:"🧬",bg:"#f0fff4",title:"Biology Basics",count:"10 questions"},
+  {emoji:"⚗️",bg:"#fff8e1",title:"Chemistry 101",count:"10 questions"},
+  {emoji:"📐",bg:"#fce4ec",title:"Math Fundamentals",count:"10 questions"},
+  {emoji:"🏛️",bg:"#f3e5f5",title:"Ancient History",count:"10 questions"},
+  {emoji:"💻",bg:"#e8eaf6",title:"Computer Science",count:"10 questions"},
+];
+
+document.getElementById("discover-grid").innerHTML = DISCOVER_SETS.map(s => `
+  <div class="set-card">
+    <div class="set-card-banner" style="background:${s.bg}">${s.emoji}</div>
+    <div class="set-card-body"><h4>${s.title}</h4><p>${s.count}</p></div>
+  </div>`).join("");
+
+// ── NAV ───────────────────────────────────────────────────────────────────
+function navTo(page, el) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  document.getElementById("page-" + page).classList.add("active");
+  if (el) el.classList.add("active");
+  document.getElementById("sidebar").classList.remove("open");
+  if (page === "mysets") renderMySets();
+  if (page === "favorites") renderFavs();
+}
+
+function goPlay() {
+  navTo("play", document.getElementById("nav-play"));
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+}
+
+// ── LOCAL STORAGE: SETS ───────────────────────────────────────────────────
+const SETS_KEY = "quizzly_sets";
+const FAVS_KEY = "quizzly_favs";
+
+function loadSets() {
+  try { return JSON.parse(localStorage.getItem(SETS_KEY)) || []; } catch { return []; }
+}
+function saveSets(sets) { localStorage.setItem(SETS_KEY, JSON.stringify(sets)); }
+function loadFavs() {
+  try { return JSON.parse(localStorage.getItem(FAVS_KEY)) || []; } catch { return []; }
+}
+function saveFavs(favs) { localStorage.setItem(FAVS_KEY, JSON.stringify(favs)); }
+
+// ── MY SETS RENDERING ─────────────────────────────────────────────────────
+function renderMySets() {
+  const sets = loadSets();
+  const favs = loadFavs();
+  const grid = document.getElementById("mysets-grid");
+  const empty = document.getElementById("mysets-empty");
+  if (sets.length === 0) { grid.innerHTML = ""; empty.style.display = "block"; return; }
+  empty.style.display = "none";
+  const bannerColors = ["#ebe9fd","#d1f2eb","#fff3cd","#ffe5e5","#e8f4fd","#f3e5f5"];
+  grid.innerHTML = sets.map((s, i) => {
+    const isFav = favs.includes(s.id);
+    const bg = bannerColors[i % bannerColors.length];
+    return `
+    <div class="set-card" style="cursor:default">
+      <div class="set-card-banner" style="background:${bg}">${s.emoji || "📝"}</div>
+      <div class="set-card-body">
+        <h4>${esc(s.title)}</h4>
+        <p>${s.questions.length} question${s.questions.length !== 1 ? "s" : ""}</p>
+      </div>
+      <div class="set-card-actions">
+        <button class="set-action-btn${isFav ? " starred" : ""}" onclick="toggleFav('${s.id}')">${isFav ? "★ Starred" : "☆ Star"}</button>
+        <button class="set-action-btn" onclick="editSet('${s.id}')">Edit</button>
+        <button class="set-action-btn danger" onclick="deleteSet('${s.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function renderFavs() {
+  const sets = loadSets();
+  const favs = loadFavs();
+  const grid = document.getElementById("favs-grid");
+  const empty = document.getElementById("favs-empty");
+  const favSets = sets.filter(s => favs.includes(s.id));
+  if (favSets.length === 0) { grid.innerHTML = ""; empty.style.display = "block"; return; }
+  empty.style.display = "none";
+  const bannerColors = ["#ebe9fd","#d1f2eb","#fff3cd","#ffe5e5","#e8f4fd","#f3e5f5"];
+  grid.innerHTML = favSets.map((s, i) => `
+    <div class="set-card" style="cursor:default">
+      <div class="set-card-banner" style="background:${bannerColors[i % bannerColors.length]}">${s.emoji || "📝"}</div>
+      <div class="set-card-body">
+        <h4>${esc(s.title)}</h4>
+        <p>${s.questions.length} question${s.questions.length !== 1 ? "s" : ""}</p>
+      </div>
+      <div class="set-card-actions">
+        <button class="set-action-btn starred" onclick="toggleFav('${s.id}')">★ Starred</button>
+        <button class="set-action-btn" onclick="editSet('${s.id}')">Edit</button>
+      </div>
+    </div>`).join("");
+}
+
+function toggleFav(id) {
+  const favs = loadFavs();
+  const idx = favs.indexOf(id);
+  if (idx === -1) favs.push(id); else favs.splice(idx, 1);
+  saveFavs(favs);
+  renderMySets();
+  renderFavs();
+}
+
+function deleteSet(id) {
+  if (!confirm("Delete this set? This can't be undone.")) return;
+  const sets = loadSets().filter(s => s.id !== id);
+  saveSets(sets);
+  const favs = loadFavs().filter(f => f !== id);
+  saveFavs(favs);
+  renderMySets();
+  renderFavs();
+}
+
+// ── SET CREATOR ───────────────────────────────────────────────────────────
+let editingId = null;
+let questionCount = 0;
+
+function openCreator(fresh = true) {
+  editingId = null;
+  questionCount = 0;
+  document.getElementById("creator-title").textContent = "New set";
+  document.getElementById("set-title").value = "";
+  document.getElementById("set-emoji").value = "";
+  document.getElementById("questions-list").innerHTML = "";
+  document.getElementById("creator-err").textContent = "";
+  addQuestion();
+  addQuestion();
+  navTo("creator", document.getElementById("nav-creator"));
+}
+
+function cancelCreator() {
+  navTo("mysets", document.getElementById("nav-mysets"));
+  renderMySets();
+}
+
+function editSet(id) {
+  const set = loadSets().find(s => s.id === id);
+  if (!set) return;
+  editingId = id;
+  questionCount = 0;
+  document.getElementById("creator-title").textContent = "Edit set";
+  document.getElementById("set-title").value = set.title;
+  document.getElementById("set-emoji").value = set.emoji || "";
+  document.getElementById("questions-list").innerHTML = "";
+  document.getElementById("creator-err").textContent = "";
+  set.questions.forEach(q => addQuestion(q));
+  navTo("creator", document.getElementById("nav-creator"));
+}
+
+function addQuestion(existing = null) {
+  questionCount++;
+  const qid = questionCount;
+  const opts = existing ? existing.opts : ["", "", "", ""];
+  const correctIdx = existing ? opts.indexOf(existing.a) : 0;
+
+  const div = document.createElement("div");
+  div.className = "q-builder";
+  div.id = `qb-${qid}`;
+  div.innerHTML = `
+    <div class="q-builder-header">
+      <span class="q-builder-num">Question ${qid}</span>
+      <button class="remove-q-btn" onclick="removeQuestion(${qid})" title="Remove">✕</button>
+    </div>
+    <input type="text" id="qt-${qid}" placeholder="Question text" value="${esc(existing?.q || '')}">
+    <div class="opts-label">Answer options — click circle to mark correct</div>
+    <div class="opts-grid">
+      ${opts.map((o, i) => `
+        <div class="opt-wrap">
+          <div class="opt-marker${i === correctIdx ? " correct" : ""}" id="om-${qid}-${i}" onclick="setCorrect(${qid},${i})">✓</div>
+          <input type="text" id="oo-${qid}-${i}" placeholder="Option ${i+1}" value="${esc(o)}">
+        </div>`).join("")}
+    </div>`;
+  document.getElementById("questions-list").appendChild(div);
+  // renumber all
+  renumberQuestions();
+}
+
+function removeQuestion(qid) {
+  const el = document.getElementById(`qb-${qid}`);
+  if (el) el.remove();
+  renumberQuestions();
+}
+
+function renumberQuestions() {
+  document.querySelectorAll(".q-builder").forEach((el, i) => {
+    el.querySelector(".q-builder-num").textContent = `Question ${i + 1}`;
+  });
+}
+
+function setCorrect(qid, idx) {
+  for (let i = 0; i < 4; i++) {
+    const m = document.getElementById(`om-${qid}-${i}`);
+    if (m) m.classList.toggle("correct", i === idx);
+  }
+}
+
+function getCorrectIdx(qid) {
+  for (let i = 0; i < 4; i++) {
+    const m = document.getElementById(`om-${qid}-${i}`);
+    if (m && m.classList.contains("correct")) return i;
+  }
+  return 0;
+}
+
+function saveSet() {
+  const title = document.getElementById("set-title").value.trim();
+  const emoji = document.getElementById("set-emoji").value.trim() || "📝";
+  const errEl = document.getElementById("creator-err");
+  if (!title) { errEl.textContent = "Please enter a set title."; return; }
+
+  const qEls = document.querySelectorAll(".q-builder");
+  if (qEls.length === 0) { errEl.textContent = "Add at least one question."; return; }
+
+  const questions = [];
+  for (const el of qEls) {
+    const qid = el.id.replace("qb-", "");
+    const q = document.getElementById(`qt-${qid}`)?.value.trim();
+    if (!q) { errEl.textContent = "All questions need text."; return; }
+    const opts = [];
+    for (let i = 0; i < 4; i++) {
+      const v = document.getElementById(`oo-${qid}-${i}`)?.value.trim();
+      if (!v) { errEl.textContent = `Question "${q}" has an empty option.`; return; }
+      opts.push(v);
+    }
+    const correctIdx = getCorrectIdx(qid);
+    questions.push({ q, a: opts[correctIdx], opts });
+  }
+
+  const sets = loadSets();
+  if (editingId) {
+    const idx = sets.findIndex(s => s.id === editingId);
+    if (idx !== -1) sets[idx] = { ...sets[idx], title, emoji, questions };
+  } else {
+    sets.push({ id: "set_" + Date.now(), title, emoji, questions, created: Date.now() });
+  }
+  saveSets(sets);
+  errEl.textContent = "";
+  navTo("mysets", document.getElementById("nav-mysets"));
+  renderMySets();
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// Init renders
+renderMySets();
+renderFavs();
+
+document.getElementById("nav-creator").addEventListener("click", () => openCreator());
+
+// ── GAME STATE ────────────────────────────────────────────────────────────
+let ws = null, myId = null, myName = "", roomCode = "", isHost = false;
+let myScore = 0, answered = false, room = null, lastQ = -1;
+
+// ── WS ────────────────────────────────────────────────────────────────────
+function connect() {
+  try {
+    ws = new WebSocket(WS_URL);
+    ws.onmessage = e => handleMsg(JSON.parse(e.data));
+    ws.onclose = () => setTimeout(connect, 3000);
+  } catch(e) {}
+}
+function sendMsg(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
+
+function handleMsg(msg) {
+  if (msg.type === "error") { alert(msg.msg); return; }
+  if (msg.type === "hosted") { room = msg.room; showStep("step-lobby-host"); document.getElementById("lobby-code").textContent = roomCode; renderLobby(); }
+  if (msg.type === "joined") { room = msg.room; showStep("step-lobby-join"); document.getElementById("join-code-display").textContent = roomCode; renderLobby(); }
+  if (msg.type === "update") {
+    room = msg.room;
+    if (room.status === "lobby") renderLobby();
+    if (room.status === "playing") renderGameQ();
+    if (room.status === "done") renderResults();
+  }
+}
+
+// ── ROLE PICK ─────────────────────────────────────────────────────────────
+function pickRole(r) {
+  document.getElementById("card-host").classList.toggle("selected", r === "host");
+  document.getElementById("card-join").classList.toggle("selected", r === "join");
+  document.getElementById("form-host").style.display = r === "host" ? "block" : "none";
+  document.getElementById("form-join").style.display = r === "join" ? "block" : "none";
+}
+
+function hostGame() {
+  const name = document.getElementById("host-name").value.trim();
+  if (!name) { document.getElementById("host-err").textContent = "Enter your name"; return; }
+  myName = name; myId = genId(); isHost = true; myScore = 0; answered = false;
+  roomCode = genCode();
+  const questions = shuffle(QUESTIONS).slice(0, 10);
+  sendMsg({ type: "host", code: roomCode, name, id: myId, questions });
+}
+
+function joinGame() {
+  const name = document.getElementById("join-name").value.trim();
+  const code = document.getElementById("join-code").value.trim().toUpperCase();
+  if (!name) { document.getElementById("join-err").textContent = "Enter your name"; return; }
+  if (!code) { document.getElementById("join-err").textContent = "Enter a room code"; return; }
+  myName = name; myId = genId(); isHost = false; myScore = 0; answered = false; roomCode = code;
+  sendMsg({ type: "join", code, name, id: myId });
+}
+
+// ── LOBBY ─────────────────────────────────────────────────────────────────
+const AVATAR_COLORS = [["#ebe9fd","#4f3de8"],["#d1f2eb","#0a6640"],["#fff3cd","#856404"],["#ffe5e5","#c0392b"],["#e8f4fd","#0c5577"]];
+function av(name) {
+  const [bg,col] = AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
+  return `<div class="avatar" style="background:${bg};color:${col}">${name.slice(0,2).toUpperCase()}</div>`;
+}
+
+function renderLobby() {
+  const players = Object.values(room.players);
+  const html = players.map(p => `<div class="player-row">${av(p.name)}<span class="player-name">${p.name}${p.name===myName?" (you)":""}</span><span class="player-pts">${p.score} pts</span></div>`).join("");
+  if (isHost) {
+    document.getElementById("host-player-list").innerHTML = html;
+    const btn = document.getElementById("start-btn");
+    btn.disabled = players.length < 2;
+    btn.textContent = players.length < 2 ? `Waiting for players (${players.length}/2 min)` : `Start game — ${players.length} players`;
+  } else {
+    document.getElementById("join-player-list").innerHTML = html;
+  }
+  if (room.status === "playing") renderGameQ();
+}
+
+function startGame() { sendMsg({ type: "start", code: roomCode }); }
+
+// ── GAME ──────────────────────────────────────────────────────────────────
+function renderGameQ() {
+  showStep("step-game");
+  const q = room.questions[room.currentQ];
+  const isNew = room.currentQ !== lastQ;
+  if (isNew) { answered = false; lastQ = room.currentQ; }
+
+  document.getElementById("play-q-label").textContent = `Question ${room.currentQ + 1}`;
+  document.getElementById("play-q-text").textContent = q.q;
+  document.getElementById("q-counter").textContent = `${room.currentQ + 1}/${room.questions.length}`;
+  document.getElementById("play-progress").style.width = `${(room.currentQ / room.questions.length) * 100}%`;
+  document.getElementById("play-score").textContent = myScore;
+
+  if (isNew) {
+    document.getElementById("play-feedback").style.display = "none";
+    document.getElementById("play-wait").style.display = "none";
+    document.getElementById("play-next").style.display = "none";
+    const grid = document.getElementById("play-ans-grid");
+    grid.innerHTML = "";
+    shuffle(q.opts).forEach(opt => {
+      const b = document.createElement("button");
+      b.className = "ans-btn"; b.textContent = opt;
+      b.onclick = () => submitAns(b, opt, q.a);
+      grid.appendChild(b);
+    });
+  }
+
+  const allDone = Object.values(room.players).every(p => p.answered);
+  if (allDone && answered) {
+    document.getElementById("play-wait").style.display = "none";
+    if (isHost) document.getElementById("play-next").style.display = "block";
+    else { const w = document.getElementById("play-wait"); w.textContent = "Waiting for host..."; w.style.display = "block"; }
+  }
+}
+
+function submitAns(btn, chosen, correct) {
+  if (answered) return;
+  answered = true;
+  const ok = chosen === correct;
+  btn.classList.add(ok ? "correct" : "wrong");
+  if (ok) myScore += 100;
+  else document.querySelectorAll(".ans-btn").forEach(b => { if (b.textContent === correct) b.classList.add("reveal"); });
+  document.querySelectorAll(".ans-btn").forEach(b => b.disabled = true);
+  document.getElementById("play-score").textContent = myScore;
+  const fb = document.getElementById("play-feedback");
+  fb.className = "feedback-box " + (ok ? "fb-correct" : "fb-wrong");
+  fb.textContent = ok ? "✓ Correct! +100" : `✗ Wrong — ${correct}`;
+  fb.style.display = "block";
+  document.getElementById("play-wait").style.display = "block";
+  sendMsg({ type: "answer", code: roomCode, correct: ok });
+}
+
+function nextQuestion() { sendMsg({ type: "next", code: roomCode }); }
+
+// ── RESULTS ───────────────────────────────────────────────────────────────
+function renderResults() {
+  showStep("step-results");
+  const players = Object.values(room.players).sort((a,b) => b.score - a.score);
+  const me = players.find(p => p.name === myName);
+  const rank = players.indexOf(me) + 1;
+  document.getElementById("res-title").textContent = rank === 1 ? "You won! 🎉" : "Game over!";
+  document.getElementById("res-score").textContent = myScore;
+  document.getElementById("res-sub").textContent = `You placed #${rank} of ${players.length}`;
+  const medals = ["🥇","🥈","🥉"];
+  document.getElementById("standings-list").innerHTML = players.map((p,i) => `
+    <div class="rank-row${p.name===myName?" me":""}">
+      <div class="rank-num">${medals[i]||i+1}</div>
+      ${av(p.name)}
+      <div class="rank-name">${p.name}${p.name===myName?" (you)":""}</div>
+      <div class="rank-score">${p.score} pts</div>
+    </div>`).join("");
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function showStep(id) {
+  ["step-role","step-lobby-host","step-lobby-join","step-game","step-results"].forEach(s => {
+    document.getElementById(s).style.display = s === id ? "block" : "none";
+  });
+}
+
+function resetPlay() {
+  myId=null;myName="";roomCode="";isHost=false;myScore=0;answered=false;room=null;lastQ=-1;
+  document.getElementById("host-name").value="";
+  document.getElementById("join-name").value="";
+  document.getElementById("join-code").value="";
+  document.getElementById("host-err").textContent="";
+  document.getElementById("join-err").textContent="";
+  showStep("step-role");
+  pickRole("host");
+}
+
+function genId() { return Math.random().toString(36).slice(2,10); }
+function genCode() { return String(Math.floor(1000+Math.random()*9000)); }
+function shuffle(a) { return [...a].sort(()=>Math.random()-0.5); }
+
+connect();
+</script>
+</body>
+</html>
