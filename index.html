@@ -509,20 +509,30 @@ body {
 
 
 /* ── AVATARS ─────────────────────────────────────────── */
-.avatar-picker { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 12px; }
-.avatar-opt {
-  width:40px; height:40px; border-radius:50%; cursor:pointer;
-  display:flex; align-items:center; justify-content:center;
-  font-size:18px; border:3px solid transparent;
-  transition:transform 0.1s, border-color 0.15s;
-}
-.avatar-opt:hover { transform:scale(1.12); }
-.avatar-opt.selected { border-color:#fff; box-shadow:0 0 0 3px var(--indigo); }
-.avatar-circle {
-  width:36px; height:36px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-size:16px; flex-shrink:0; font-weight:700;
-}
+.avatar-circle { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; font-weight:700; }
+.avatar-picker-btn { display:flex; align-items:center; gap:10px; cursor:pointer; background:#f8f7ff; border:2px solid #e8e4ff; border-radius:var(--radius-sm); padding:8px 14px; transition:border-color 0.15s; width:100%; }
+.avatar-picker-btn:hover { border-color:var(--indigo-mid); }
+.avatar-preview-circle { width:42px; height:42px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:22px; }
+.avatar-picker-label { font-family:var(--font); font-weight:700; font-size:14px; color:#4a4a6a; flex:1; }
+.avatar-picker-arrow { color:#9b99b8; font-size:12px; }
+#emoji-picker-modal { display:none; position:fixed; inset:0; z-index:600; background:rgba(26,20,64,0.5); align-items:center; justify-content:center; backdrop-filter:blur(3px); }
+#emoji-picker-modal.open { display:flex; }
+.emoji-picker-panel { background:#fff; border-radius:var(--radius); padding:1.25rem; width:min(480px,95vw); max-height:80vh; display:flex; flex-direction:column; gap:0.75rem; }
+.emoji-picker-title { font-family:var(--font); font-weight:900; font-size:1rem; color:#1a1440; }
+.emoji-search { width:100%; padding:8px 12px; border:2px solid #e8e4ff; border-radius:8px; font-size:14px; font-family:var(--font-body); outline:none; }
+.emoji-search:focus { border-color:var(--indigo); }
+.emoji-section-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:#9b99b8; font-family:var(--font); padding:4px 0 2px; }
+.emoji-grid-wrap { overflow-y:auto; flex:1; min-height:120px; }
+.emoji-grid { display:grid; grid-template-columns:repeat(auto-fill,42px); gap:4px; }
+.emoji-cell { width:42px; height:42px; display:flex; align-items:center; justify-content:center; font-size:22px; border-radius:8px; cursor:pointer; border:2px solid transparent; transition:background 0.1s,border-color 0.1s; }
+.emoji-cell:hover { background:var(--indigo-light); border-color:var(--indigo-mid); }
+.emoji-cell.selected { border-color:var(--indigo); background:var(--indigo-light); }
+.color-swatches { display:flex; gap:8px; flex-wrap:wrap; margin:6px 0; }
+.color-swatch { width:32px; height:32px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:transform 0.1s,border-color 0.1s; }
+.color-swatch:hover { transform:scale(1.15); }
+.color-swatch.selected { border-color:#1a1440; box-shadow:0 0 0 2px #fff,0 0 0 4px #1a1440; }
+.emoji-picker-actions { display:flex; gap:8px; }
+.emoji-picker-actions button { flex:1; }
 
 /* ── STREAKS ─────────────────────────────────────────── */
 @keyframes fire-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
@@ -661,6 +671,16 @@ body {
 .lobby-settings-drawer .mode-card .mode-desc { color:rgba(255,255,255,0.7); }
 .lobby-settings-drawer .mode-card.selected { background:rgba(255,255,255,0.3); border-color:#fff; }
 
+/* ── VIP NAME EFFECTS ────────────────────────────────── */
+.vip-name { font-weight:900; display:inline-block; }
+.vip-glow { text-shadow:0 0 8px currentColor, 0 0 20px currentColor; }
+.vip-gradient { background:linear-gradient(90deg,#ffc926,#ff6b6b,#4f3de8,#20c997); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+@keyframes rainbow-shift { 0%{filter:hue-rotate(0deg)} 100%{filter:hue-rotate(360deg)} }
+.vip-rainbow { animation:rainbow-shift 2s linear infinite; font-weight:900; }
+.vip-bold { font-weight:900; letter-spacing:0.02em; }
+.vip-tag { font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; background:rgba(255,201,38,0.2); color:#ffc926; border:1px solid rgba(255,201,38,0.4); margin-left:4px; vertical-align:middle; }
+.vip-crown { margin-right:2px; }
+
 /* ── KICK BUTTON ────────────────────────────────────── */
 .kick-btn { padding:4px 10px; border-radius:6px; border:1.5px solid #ffe5e5; background:transparent; font-size:11px; font-weight:700; cursor:pointer; color:#c0392b; transition:background 0.12s; margin-left:auto; }
 .kick-btn:hover { background:#ffe5e5; }
@@ -795,13 +815,13 @@ body {
         </div>
         <div id="form-host">
           <div class="form-group"><label>Your name</label><input type="text" id="host-name" placeholder="Enter your name" maxlength="20"></div>
-          <div class="form-group"><label>Choose your avatar</label><div class="avatar-picker" id="avatar-host"><div class="avatar-opt" data-color="#FF6B6B" data-emoji="🐉" style="background:#FF6B6B" onclick="pickAvatar(this,'avatar-host')">🐉</div><div class="avatar-opt" data-color="#FFC926" data-emoji="🦊" style="background:#FFC926" onclick="pickAvatar(this,'avatar-host')">🦊</div><div class="avatar-opt" data-color="#27B560" data-emoji="🐸" style="background:#27B560" onclick="pickAvatar(this,'avatar-host')">🐸</div><div class="avatar-opt" data-color="#3D6FE0" data-emoji="🐬" style="background:#3D6FE0" onclick="pickAvatar(this,'avatar-host')">🐬</div><div class="avatar-opt" data-color="#E2A020" data-emoji="🦁" style="background:#E2A020" onclick="pickAvatar(this,'avatar-host')">🦁</div><div class="avatar-opt" data-color="#9B59B6" data-emoji="🦄" style="background:#9B59B6" onclick="pickAvatar(this,'avatar-host')">🦄</div><div class="avatar-opt" data-color="#20c997" data-emoji="🐢" style="background:#20c997" onclick="pickAvatar(this,'avatar-host')">🐢</div><div class="avatar-opt" data-color="#E8422A" data-emoji="🔥" style="background:#E8422A" onclick="pickAvatar(this,'avatar-host')">🔥</div></div></div>
+          <div class="form-group"><label>Choose your avatar</label><button class="avatar-picker-btn" onclick="openEmojiPicker('host')" type="button"><div class="avatar-preview-circle" id="avatar-preview-host" style="background:#4f3de8">🎮</div><span class="avatar-picker-label" id="avatar-label-host">Click to choose</span><span class="avatar-picker-arrow">▾</span></button></div></div>
           <button class="action-btn" onclick="hostGame()">Create lobby</button>
           <div class="err" id="host-err"></div>
         </div>
         <div id="form-join" style="display:none">
           <div class="form-group"><label>Your name</label><input type="text" id="join-name" placeholder="Enter your name" maxlength="20"></div>
-          <div class="form-group"><label>Choose your avatar</label><div class="avatar-picker" id="avatar-join"><div class="avatar-opt" data-color="#FF6B6B" data-emoji="🐉" style="background:#FF6B6B" onclick="pickAvatar(this,'avatar-join')">🐉</div><div class="avatar-opt" data-color="#FFC926" data-emoji="🦊" style="background:#FFC926" onclick="pickAvatar(this,'avatar-join')">🦊</div><div class="avatar-opt" data-color="#27B560" data-emoji="🐸" style="background:#27B560" onclick="pickAvatar(this,'avatar-join')">🐸</div><div class="avatar-opt" data-color="#3D6FE0" data-emoji="🐬" style="background:#3D6FE0" onclick="pickAvatar(this,'avatar-join')">🐬</div><div class="avatar-opt" data-color="#E2A020" data-emoji="🦁" style="background:#E2A020" onclick="pickAvatar(this,'avatar-join')">🦁</div><div class="avatar-opt" data-color="#9B59B6" data-emoji="🦄" style="background:#9B59B6" onclick="pickAvatar(this,'avatar-join')">🦄</div><div class="avatar-opt" data-color="#20c997" data-emoji="🐢" style="background:#20c997" onclick="pickAvatar(this,'avatar-join')">🐢</div><div class="avatar-opt" data-color="#E8422A" data-emoji="🔥" style="background:#E8422A" onclick="pickAvatar(this,'avatar-join')">🔥</div></div></div>
+          <div class="form-group"><label>Choose your avatar</label><button class="avatar-picker-btn" onclick="openEmojiPicker('join')" type="button"><div class="avatar-preview-circle" id="avatar-preview-join" style="background:#4f3de8">🎮</div><span class="avatar-picker-label" id="avatar-label-join">Click to choose</span><span class="avatar-picker-arrow">▾</span></button></div></div>
           <div class="form-group"><label>Room code</label><input type="text" id="join-code" placeholder="e.g. 4829" maxlength="6" style="letter-spacing:0.1em"></div>
           <button class="action-btn teal" onclick="joinGame()">Join game</button>
           <div class="err" id="join-err"></div>
@@ -1050,6 +1070,20 @@ body {
     </div>
   </div>
 
+</div>
+
+<!-- Emoji picker modal -->
+<div id="emoji-picker-modal">
+  <div class="emoji-picker-panel">
+    <div class="emoji-picker-title">Choose your avatar</div>
+    <input class="emoji-search" type="text" placeholder="Search emoji..." oninput="filterEmoji(this.value)" id="emoji-search">
+    <div><div class="emoji-section-label">Background colour</div><div class="color-swatches" id="color-swatches"></div></div>
+    <div class="emoji-grid-wrap"><div class="emoji-grid" id="emoji-grid"></div></div>
+    <div class="emoji-picker-actions">
+      <button class="action-btn ghost" onclick="closeEmojiPicker()">Cancel</button>
+      <button class="action-btn" onclick="confirmEmojiPicker()">Done</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1676,7 +1710,7 @@ function renderLobby() {
           ? `<button class="lp-kick" onclick="kickPlayer('${p.id}')" title="Kick">✕</button>` : "";
         return `<div class="lobby-player-card">
           <div class="lp-avatar" style="background:${color}">${emoji}</div>
-          <span class="lp-name">${esc(p.name)}</span>
+          <span class="lp-name">${playerDisplayName(p)}</span>
           ${kick}
         </div>`;
       }).join("");
@@ -1687,7 +1721,7 @@ function renderLobby() {
     if (btn) btn.disabled = players.length < 1;
   } else {
     // Player lobby — simple list
-    const html = players.map(p => `<div class="player-row">${makeAvatarEl(p)}<span class="player-name">${p.name}${p.name===myName?" (you)":""}</span><span class="player-pts">${p.score} pts</span></div>`).join("");
+    const html = players.map(p => `<div class="player-row">${makeAvatarEl(p)}<span class="player-name">${playerDisplayName(p)}${p.name===myName?" (you)":""}</span><span class="player-pts">${p.score} pts</span></div>`).join("");
     document.getElementById("join-player-list").innerHTML = html;
   }
   if (room.status === "playing") renderGameQ();
@@ -1789,7 +1823,7 @@ function renderHostLeaderboard() {
     <div class="player-row" style="border-color:${p.answered ? "#20c997" : "#e8e4ff"}">
       <div style="width:28px;text-align:center;font-size:16px">${medals[i] || i + 1}</div>
       ${makeAvatarEl(p)}
-      <span class="player-name">${esc(p.name)}</span>
+      <span class="player-name">${playerDisplayName(p)}</span>
       <span class="player-pts" style="font-weight:700;color:var(--indigo)">${p.score} pts</span>
       <span style="font-size:11px;padding:3px 8px;border-radius:20px;font-weight:700;margin-left:4px;background:${p.answered ? "#d1f2eb" : "#f0eeff"};color:${p.answered ? "#0a6640" : "#9b99b8"}">${p.answered ? "✓" : "..."}</span>
     </div>`).join("");
@@ -1852,7 +1886,7 @@ function renderResults() {
     <div class="rank-row${p.name===myName?" me":""}">
       <div class="rank-num">${medals[i]||i+1}</div>
       ${makeAvatarEl(p)}
-      <div class="rank-name">${p.name}${p.name===myName?" (you)":""}</div>
+      <div class="rank-name">${playerDisplayName(p)}${p.name===myName?" (you)":""}</div>
       <div class="rank-score">${p.score} pts</div>
     </div>`).join("");
   // Save stats (only for players, not host)
@@ -2144,17 +2178,112 @@ function submitCallout(accusedId) {
 
 // ── AVATARS ────────────────────────────────────────────────────────────────
 let myAvatar = { color: "#4f3de8", emoji: "🎮" };
+let _emojiPickerFor = "host";
+let _pickerEmoji = "🎮";
+let _pickerColor = "#4f3de8";
 
-function pickAvatar(el, pickerId) {
-  document.querySelectorAll('#' + pickerId + ' .avatar-opt').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-  myAvatar = { color: el.dataset.color, emoji: el.dataset.emoji };
+const AVATAR_COLORS_LIST = ["#FF6B6B","#FFC926","#27B560","#3D6FE0","#E2A020","#9B59B6","#20c997","#E8422A","#4f3de8","#0fbfad","#1a1440","#e8e4ff"];
+
+const EMOJI_SECTIONS = {
+  "Animals": ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🦆","🦅","🦉","🦇","🐺","🐴","🦄","🐝","🦋","🐢","🐍","🦎","🦕","🐙","🦑","🐠","🐟","🐬","🐳","🦈","🐊","🐅","🐆","🦓","🐘","🦛","🐪","🦒","🦘","🐕","🐈","🦜","🦢","🦩","🐇","🦝","🦦","🦥","🐿","🦔"],
+  "Food": ["🍏","🍎","🍊","🍋","🍌","🍉","🍇","🍓","🫐","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🥑","🍆","🥕","🌽","🌶","🥦","🍄","🌰","🍕","🍔","🍟","🌭","🍿","🧁","🍰","🎂","🍩","🍪","🍫","🍭","🍬","🍦","🍧","🍨","☕","🧋","🍺","🍷"],
+  "Nature": ["🌸","🌺","🌻","🌹","🌷","🌼","💐","🍀","🌿","🌱","🌲","🌳","🌴","🌵","🍃","🍂","🍁","💧","🌊","🌈","⚡","❄️","🔥","💥","🌙","☀️","⭐","🌟","✨"],
+  "Sports": ["⚽","🏀","🏈","⚾","🎾","🏐","🏉","🎱","🏓","🏸","🥊","🥋","🎯","⛳","🏆","🥇","🥈","🥉","🏅"],
+  "Objects": ["💎","🔮","🪄","🎩","🎨","🎮","🕹","🎲","🧩","🔑","💡","🔦","💰","📱","💻","📷","📹","🎥","🔬","🔭","💊","🧬","🚀","🛸","✈️","🚂","🚗","⚓","🧲","🎸","🎺","🎻","🥁","🎹"],
+  "Symbols": ["❤️","🧡","💛","💚","💙","💜","🖤","🤍","💔","💕","💞","💓","💗","💖","💘","💝","⭐","🌟","✨","💫","🔥","💥","🎉","🎊","🏳️","🚩","🎌","🏴"],
+};
+
+function openEmojiPicker(forWhom) {
+  _emojiPickerFor = forWhom;
+  _pickerEmoji = myAvatar.emoji;
+  _pickerColor = myAvatar.color;
+  buildEmojiGrid();
+  buildColorSwatches();
+  document.getElementById("emoji-search").value = "";
+  document.getElementById("emoji-picker-modal").classList.add("open");
+}
+
+function closeEmojiPicker() {
+  document.getElementById("emoji-picker-modal").classList.remove("open");
+}
+
+function confirmEmojiPicker() {
+  myAvatar = { color: _pickerColor, emoji: _pickerEmoji };
+  const preview = document.getElementById("avatar-preview-" + _emojiPickerFor);
+  const label = document.getElementById("avatar-label-" + _emojiPickerFor);
+  if (preview) { preview.style.background = _pickerColor; preview.textContent = _pickerEmoji; }
+  if (label) label.textContent = _pickerEmoji;
+  closeEmojiPicker();
+}
+
+function buildEmojiGrid(filter) {
+  const grid = document.getElementById("emoji-grid");
+  grid.innerHTML = "";
+  if (filter) {
+    const all = Object.values(EMOJI_SECTIONS).flat();
+    all.forEach(e => grid.appendChild(makeEmojiCell(e)));
+  } else {
+    Object.entries(EMOJI_SECTIONS).forEach(([section, list]) => {
+      const label = document.createElement("div");
+      label.className = "emoji-section-label";
+      label.style.gridColumn = "1/-1";
+      label.textContent = section;
+      grid.appendChild(label);
+      list.forEach(e => grid.appendChild(makeEmojiCell(e)));
+    });
+  }
+}
+
+function makeEmojiCell(emoji) {
+  const cell = document.createElement("div");
+  cell.className = "emoji-cell" + (emoji === _pickerEmoji ? " selected" : "");
+  cell.textContent = emoji;
+  cell.onclick = () => {
+    _pickerEmoji = emoji;
+    document.querySelectorAll(".emoji-cell").forEach(c => c.classList.remove("selected"));
+    cell.classList.add("selected");
+  };
+  return cell;
+}
+
+function filterEmoji(query) {
+  buildEmojiGrid(query.trim() || null);
+}
+
+function buildColorSwatches() {
+  const wrap = document.getElementById("color-swatches");
+  wrap.innerHTML = AVATAR_COLORS_LIST.map(c =>
+    `<div class="color-swatch${c === _pickerColor ? " selected" : ""}" style="background:${c}" onclick="selectColor('${c}')"></div>`
+  ).join("");
+}
+
+function selectColor(color) {
+  _pickerColor = color;
+  document.querySelectorAll(".color-swatch").forEach(s => {
+    const bg = s.style.backgroundColor;
+    // compare hex loosely
+    s.classList.toggle("selected", s.style.background === color || bg === color);
+  });
 }
 
 function makeAvatarEl(player) {
   const color = (player.avatar && player.avatar.color) || '#4f3de8';
   const emoji = (player.avatar && player.avatar.emoji) || '🎮';
   return `<div class="avatar-circle" style="background:${color};color:#fff">${emoji}</div>`;
+}
+
+function renderVipName(player) {
+  if (!player.vip) return esc(player.name);
+  const v = player.vip;
+  const crown = v.crown ? '<span class="vip-crown">👑</span>' : '';
+  const effectClass = v.effect && v.effect !== 'none' ? ` vip-${v.effect}` : '';
+  const nameStyle = (v.effect !== 'gradient' && v.color) ? `color:${v.color}` : '';
+  const tag = v.tag ? `<span class="vip-tag">${esc(v.tag)}</span>` : '';
+  return `${crown}<span class="vip-name${effectClass}" style="${nameStyle}">${esc(player.name)}</span>${tag}`;
+}
+
+function playerDisplayName(player) {
+  return player.vip ? renderVipName(player) : esc(player.name);
 }
 
 // ── STREAKS ────────────────────────────────────────────────────────────────
@@ -2236,7 +2365,7 @@ function clearImg(qid) {
 
 // ── LOBBY MUSIC ────────────────────────────────────────────────────────────
 // Drop your audio file src here — mp3, ogg, or a URL
-const LOBBY_MUSIC_SRC = "lobby.ogg"; // e.g. "lobby.mp3" or a full URL
+const LOBBY_MUSIC_SRC = ""; // e.g. "lobby.mp3" or a full URL
 
 function startLobbyMusic() {
   const el = document.getElementById("lobby-music");
