@@ -128,6 +128,14 @@ body {
 /* ── PAGES ───────────────────────────────────────────── */
 .page { display: none; padding: 2rem; flex: 1; }
 .page.active { display: block; }
+#step-game { margin: -2rem; }
+#step-game .game-topbar { padding: 1rem 2rem 0; }
+#step-game .progress-track { margin: 0.75rem 2rem 0; }
+#step-game .question-card { margin: 0.75rem 2rem 0; border-radius: var(--radius) var(--radius) 0 0; }
+#step-game .host-game-wrap { padding: 1rem 2rem; }
+#step-game #host-game-view { padding: 1rem 2rem; }
+#step-game #player-game-view .feedback-box, #step-game #solo-game-view .feedback-box { margin: 0.75rem 2rem; }
+#step-game #player-game-view .fb-wait { margin: 0 2rem 0.5rem; }
 
 /* ── HOME PAGE ───────────────────────────────────────── */
 .home-hero {
@@ -343,32 +351,50 @@ body {
   background: #fff;
   border-radius: var(--radius);
   padding: 1.75rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0;
   border: 2px solid #e8e4ff;
+  border-bottom: none;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 .q-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--indigo-mid); margin-bottom: 8px; font-family: var(--font); }
 .q-text { font-family: var(--font); font-size: 1.15rem; font-weight: 800; line-height: 1.5; color: #1a1440; }
 
-.answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+.answers-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0;
+  height: 40vh;
+  min-height: 220px;
+  margin-bottom: 0;
+}
 .ans-btn {
-  background: #fff;
-  border: 2px solid #e8e4ff;
-  border-radius: var(--radius-sm);
-  padding: 1rem;
+  border: none;
+  border-radius: 0;
+  padding: 1rem 1.5rem;
   font-family: var(--font);
-  font-size: 14px;
+  font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
-  text-align: left;
-  color: #1a1440;
-  transition: border-color 0.15s, transform 0.1s, background 0.15s;
+  text-align: center;
+  color: #fff;
+  transition: filter 0.12s, transform 0.1s;
   line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  word-break: break-word;
 }
-.ans-btn:hover:not(:disabled) { border-color: var(--indigo); transform: translateY(-2px); background: var(--indigo-light); }
-.ans-btn:disabled { cursor: default; }
-.ans-btn.correct { background: #d1f2eb; border-color: #20c997; color: #0a6640; }
-.ans-btn.wrong { background: #ffe5e5; border-color: var(--coral); color: #c0392b; }
-.ans-btn.reveal { background: #d1f2eb; border-color: #20c997; color: #0a6640; }
+.ans-btn:nth-child(1) { background: #E2A020; }
+.ans-btn:nth-child(2) { background: #3D6FE0; }
+.ans-btn:nth-child(3) { background: #27B560; }
+.ans-btn:nth-child(4) { background: #E8422A; }
+.ans-btn:hover:not(:disabled) { filter: brightness(1.1); transform: scale(1.01); z-index: 1; }
+.ans-btn:disabled { cursor: default; filter: brightness(0.85); }
+.ans-btn.correct { filter: brightness(1.15) !important; outline: 6px solid #fff; outline-offset: -6px; }
+.ans-btn.wrong { filter: brightness(0.5) !important; }
+.ans-btn.reveal { filter: brightness(1.15) !important; outline: 6px solid #fff; outline-offset: -6px; }
 
 .feedback-box {
   padding: 12px 16px;
@@ -473,6 +499,13 @@ body {
 .q-text td, .q-text th { border:1.5px solid #c0bce8; padding:6px 10px; }
 .q-text th { background:#ebe9fd; font-weight:700; }
 
+
+/* Saboteur mode */
+.saboteur-hint { outline: 4px dashed #ffc926 !important; outline-offset: -4px; }
+.saboteur-badge-bar { background:#1a1440; color:#ffc926; font-family:var(--font); font-weight:800; font-size:14px; text-align:center; padding:10px; letter-spacing:0.05em; }
+.callout-btn { padding:8px 14px; border-radius:8px; border:2px solid #e8e4ff; background:#fff; font-family:var(--font); font-size:13px; font-weight:700; cursor:pointer; color:#1a1440; transition:background 0.15s,border-color 0.15s; }
+.callout-btn:hover { background:#ffe5e5; border-color:var(--coral); color:#c0392b; }
+.callout-btn:disabled { opacity:0.4; cursor:default; }
 
 /* ── RESPONSIVE ──────────────────────────────────────── */
 @media (max-width: 600px) {
@@ -609,15 +642,10 @@ body {
             <div class="mode-name">Classic</div>
             <div class="mode-desc">Answer at your own pace</div>
           </div>
-          <div class="mode-card" id="gm-speed" onclick="pickMode('speed')">
-            <div class="mode-emoji">⚡</div>
-            <div class="mode-name">Speed</div>
-            <div class="mode-desc">10 seconds per question</div>
-          </div>
-          <div class="mode-card" id="gm-survival" onclick="pickMode('survival')">
-            <div class="mode-emoji">❤️</div>
-            <div class="mode-name">Survival</div>
-            <div class="mode-desc">3 lives only</div>
+          <div class="mode-card" id="gm-saboteur" onclick="pickMode('saboteur')">
+            <div class="mode-emoji">🔪</div>
+            <div class="mode-name">Saboteur</div>
+            <div class="mode-desc">One traitor, find them out</div>
           </div>
         </div>
 
@@ -718,19 +746,26 @@ body {
           <div id="host-leaderboard" class="player-list" style="margin-bottom:1.25rem"></div>
           <div id="host-next-note" style="display:none;font-size:13px;color:#6b6b8a;text-align:center;padding:0.5rem">Auto-advancing in a moment...</div>
           <button class="action-btn" id="play-next" style="display:none" onclick="nextQuestion()">Next question →</button>
+          <div id="host-saboteur-log" style="display:none;margin-top:1rem;padding:1rem;background:#1a1440;border-radius:var(--radius-sm);color:#ffc926;font-family:var(--font);font-size:13px;font-weight:700"></div>
         </div>
 
         <!-- PLAYER VIEW: answer buttons -->
         <div id="player-game-view" style="display:none">
+          <div id="saboteur-badge" class="saboteur-badge-bar" style="display:none">🗡️ You are the Saboteur — pick the highlighted answer to score!</div>
           <div class="answers-grid" id="play-ans-grid"></div>
-          <div class="feedback-box fb-correct" id="play-feedback" style="display:none"></div>
-          <div class="feedback-box fb-wait" id="play-wait" style="display:none">Waiting for other players...</div>
+          <div class="feedback-box fb-correct" id="play-feedback" style="display:none;margin-top:1rem"></div>
+          <div class="feedback-box fb-wait" id="play-wait" style="display:none;margin-top:0.5rem">Waiting for other players...</div>
+          <div id="callout-panel" style="display:none;margin-top:1rem;padding:1rem;background:#fff;border:2px solid #e8e4ff;border-radius:var(--radius-sm)">
+            <div style="font-family:var(--font);font-weight:800;font-size:13px;margin-bottom:6px;color:#1a1440">🕵️ Call out the saboteur</div>
+            <div style="font-size:12px;color:#6b6b8a;margin-bottom:10px">Right = double your points. Wrong = lose half.</div>
+            <div id="callout-btns" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+          </div>
         </div>
 
         <!-- SOLO VIEW -->
         <div id="solo-game-view" style="display:none">
           <div class="answers-grid" id="solo-ans-grid"></div>
-          <div class="feedback-box" id="solo-feedback" style="display:none"></div>
+          <div class="feedback-box" id="solo-feedback" style="display:none;margin-top:1rem"></div>
         </div>
       </div>
 
@@ -833,9 +868,12 @@ const QUESTIONS = [
 ];
 
 const DISCOVER_SETS = [
-  {emoji:"❌",bg:"#e8f4fd",title:"67 quiz11! (skibidi)",count:"10 questions"},
-  {emoji:"❌",bg:"#e8f4fd",title:"why uhh bole best teacha",count:"10 questions"},
-  {emoji:"❌",bg:"#e8f4fd",title:"none of these work btw :sob:",count:"10 questions"},
+  {emoji:"🌍",bg:"#e8f4fd",title:"World Geography",count:"10 questions"},
+  {emoji:"🧬",bg:"#f0fff4",title:"Biology Basics",count:"10 questions"},
+  {emoji:"⚗️",bg:"#fff8e1",title:"Chemistry 101",count:"10 questions"},
+  {emoji:"📐",bg:"#fce4ec",title:"Math Fundamentals",count:"10 questions"},
+  {emoji:"🏛️",bg:"#f3e5f5",title:"Ancient History",count:"10 questions"},
+  {emoji:"💻",bg:"#e8eaf6",title:"Computer Science",count:"10 questions"},
 ];
 
 document.getElementById("discover-grid").innerHTML = DISCOVER_SETS.map(s => `
@@ -1234,6 +1272,9 @@ function handleMsg(msg) {
     if (room.status === "playing") { startClientTimer(); renderGameQ(); }
     if (room.status === "done") { stopClientTimer(); renderResults(); }
   }
+  if (["saboteur_assign","saboteur_clear","callout_result","saboteur_exposed"].includes(msg.type)) {
+    handleSaboteurMsg(msg);
+  }
 }
 
 // Client-side timer — runs locally for smooth countdown, synced by server ticks
@@ -1324,8 +1365,9 @@ function hostGame() {
 
 function pickMode(m) {
   selectedMode = m;
-  ["classic","speed","survival"].forEach(x => {
-    document.getElementById("gm-"+x).classList.toggle("selected", x === m);
+  ["classic","saboteur"].forEach(x => {
+    const el = document.getElementById("gm-"+x);
+    if (el) el.classList.toggle("selected", x === m);
   });
 }
 
@@ -1397,7 +1439,7 @@ function renderGameQ() {
   document.getElementById("play-score").parentElement.style.display = isHost ? "none" : "";
   const q = room.questions[room.currentQ];
   const isNew = room.currentQ !== lastQ;
-  if (isNew) { answered = false; lastQ = room.currentQ; }
+  if (isNew) { answered = false; lastQ = room.currentQ; calledOut = false; }
 
   document.getElementById("play-q-label").textContent = `Question ${room.currentQ + 1}`;
   const qEl = document.getElementById("play-q-text");
@@ -1426,11 +1468,15 @@ function renderGameQ() {
     if (isNew) {
       document.getElementById("play-feedback").style.display = "none";
       document.getElementById("play-wait").style.display = "none";
+      const callPanel = document.getElementById("callout-panel");
+      if (callPanel) callPanel.style.display = "none";
+      calledOut = false;
       const grid = document.getElementById("play-ans-grid");
       grid.innerHTML = "";
       shuffle(q.opts).forEach(opt => {
         const b = document.createElement("button");
         b.className = "ans-btn"; b.textContent = opt;
+        if (iAmSaboteur && opt === mySaboteurAnswer) b.classList.add("saboteur-hint");
         b.onclick = () => submitAns(b, opt, q.a);
         grid.appendChild(b);
       });
@@ -1461,18 +1507,27 @@ function renderHostLeaderboard() {
 function submitAns(btn, chosen, correct) {
   if (answered) return;
   answered = true;
-  const ok = chosen === correct;
-  btn.classList.add(ok ? "correct" : "wrong");
-  if (ok) myScore += 100;
-  else document.querySelectorAll(".ans-btn").forEach(b => { if (b.textContent === correct) b.classList.add("reveal"); });
+  const reallyCorrect = chosen === correct;
+  const ok = iAmSaboteur ? (chosen === mySaboteurAnswer) : reallyCorrect;
+  btn.classList.add(reallyCorrect ? "correct" : "wrong");
+  if (!reallyCorrect) document.querySelectorAll(".ans-btn").forEach(b => { if (b.textContent === correct) b.classList.add("reveal"); });
   document.querySelectorAll(".ans-btn").forEach(b => b.disabled = true);
+  if (ok) myScore += 100;
   document.getElementById("play-score").textContent = myScore;
   const fb = document.getElementById("play-feedback");
-  fb.className = "feedback-box " + (ok ? "fb-correct" : "fb-wrong");
-  fb.textContent = ok ? "✓ Correct! +100" : `✗ Wrong — ${correct}`;
+  if (iAmSaboteur) {
+    fb.className = "feedback-box " + (ok ? "fb-correct" : "fb-wrong");
+    fb.textContent = ok ? "✓ Sabotaged! +100" : "✗ You picked the real answer — cover blown!";
+  } else {
+    fb.className = "feedback-box " + (ok ? "fb-correct" : "fb-wrong");
+    fb.textContent = ok ? "✓ Correct! +100" : `✗ Wrong — ${correct}`;
+  }
   fb.style.display = "block";
   document.getElementById("play-wait").style.display = "block";
-  sendMsg({ type: "answer", code: roomCode, correct: ok });
+  sendMsg({ type: "answer", code: roomCode, correct: ok, chosen, reallyCorrect });
+  if (room && room.mode === "saboteur" && !iAmSaboteur) {
+    setTimeout(() => renderCalloutPanel(), 500);
+  }
 }
 
 function nextQuestion() { sendMsg({ type: "next", code: roomCode }); }
@@ -1532,6 +1587,7 @@ function showStep(id) {
 function resetPlay() {
   stopClientTimer();
   myId=null;myName="";roomCode="";isHost=false;myScore=0;answered=false;room=null;lastQ=-1;
+  iAmSaboteur=false;mySaboteurAnswer=null;calledOut=false;
   selectedMode="classic";selectedSetId="__default__";selectedDuration=120;
   document.getElementById("host-name").value="";
   document.getElementById("join-name").value="";
@@ -1693,6 +1749,65 @@ function checkUrlSet() {
     navTo("play", null);
     setTimeout(() => alert("This set wasn’t found in your browser. The link only works on the device where the set was created, or you need the set to be shared with you first."), 300);
   }
+}
+
+// ── SABOTEUR MODE ────────────────────────────────────────────────────────────
+let iAmSaboteur = false;
+let mySaboteurAnswer = null;
+let calledOut = false;
+
+function handleSaboteurMsg(msg) {
+  if (msg.type === "saboteur_assign") {
+    iAmSaboteur = true;
+    mySaboteurAnswer = msg.fakeAnswer;
+    const badge = document.getElementById("saboteur-badge");
+    if (badge) badge.style.display = "block";
+  } else if (msg.type === "saboteur_clear") {
+    iAmSaboteur = false;
+    mySaboteurAnswer = null;
+    const badge = document.getElementById("saboteur-badge");
+    if (badge) badge.style.display = "none";
+  } else if (msg.type === "callout_result") {
+    const fb = document.getElementById("play-feedback");
+    if (fb) {
+      fb.style.display = "block";
+      fb.className = "feedback-box " + (msg.correct ? "fb-correct" : "fb-wrong");
+      fb.textContent = msg.correct
+        ? "✓ Correct! " + msg.accusedName + " was the saboteur. Your score doubled!"
+        : "✗ Wrong! " + msg.accusedName + " was innocent. Half your points lost.";
+    }
+    const panel = document.getElementById("callout-panel");
+    if (panel) panel.style.display = "none";
+    myScore = msg.newScore;
+    document.getElementById("play-score").textContent = myScore;
+  } else if (msg.type === "saboteur_exposed") {
+    const log = document.getElementById("host-saboteur-log");
+    if (log) {
+      log.style.display = "block";
+      log.innerHTML = "🗡️ <b>" + msg.accuserName + "</b> caught <b>" + msg.accusedName + "</b>! New saboteur assigned.";
+    }
+  }
+}
+
+function renderCalloutPanel() {
+  if (!room || room.mode !== "saboteur" || iAmSaboteur || calledOut) return;
+  const panel = document.getElementById("callout-panel");
+  const btns = document.getElementById("callout-btns");
+  if (!panel || !btns) return;
+  panel.style.display = "block";
+  const players = Object.entries(room.players)
+    .filter(([id, p]) => p.name !== myName)
+    .map(([id, p]) => ({ id, name: p.name }));
+  btns.innerHTML = players.map(p =>
+    `<button class="callout-btn" onclick="submitCallout('${p.id}')">Call out ${esc(p.name)}</button>`
+  ).join("");
+}
+
+function submitCallout(accusedId) {
+  if (calledOut) return;
+  calledOut = true;
+  document.querySelectorAll(".callout-btn").forEach(b => b.disabled = true);
+  sendMsg({ type: "callout", code: roomCode, accusedId, accuserId: myId });
 }
 
 connect();
