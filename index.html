@@ -1721,7 +1721,7 @@ function renderLobby() {
     if (btn) btn.disabled = players.length < 1;
   } else {
     // Player lobby — simple list
-    const html = players.map(p => `<div class="player-row">${makeAvatarEl(p)}<span class="player-name">${playerDisplayName(p)}${p.name===myName?" (you)":""}</span><span class="player-pts">${p.score} pts</span></div>`).join("");
+    const html = players.map(p => `<div class="player-row">${makeAvatarEl(p)}<span class="player-name">${playerDisplayName(p)}${p.name===myName?'<span style="opacity:0.5;font-size:12px;margin-left:4px">(you)</span>':''}  </span><span class="player-pts">${p.score} pts</span></div>`).join("");
     document.getElementById("join-player-list").innerHTML = html;
   }
   if (room.status === "playing") renderGameQ();
@@ -1928,6 +1928,10 @@ function showStep(id) {
   const inGame = id === "step-game";
   if (sidebar) sidebar.style.transform = inGame ? "translateX(-220px)" : "";
   if (main) main.style.marginLeft = inGame ? "0" : "";
+  // Always scroll to top when changing steps
+  window.scrollTo(0, 0);
+  const mainEl = document.getElementById("main");
+  if (mainEl) mainEl.scrollTop = 0;
 }
 
 function showHostEndedMsg() {
