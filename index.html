@@ -578,6 +578,89 @@ body {
 .q-img-url:focus { border-color:var(--indigo); }
 .game-q-image { width:100%; max-height:240px; object-fit:contain; border-radius:var(--radius-sm); margin-bottom:0.75rem; display:block; }
 
+/* ── LOBBY FULLSCREEN ────────────────────────────────── */
+#step-host-setup.lobby-fullscreen {
+  position:fixed; inset:0; z-index:150;
+  background: linear-gradient(135deg, #0fbfad 0%, #0a9e8f 100%);
+  margin:0; padding:0; display:flex; flex-direction:column;
+  overflow:hidden;
+}
+.lobby-topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:1.25rem 2rem; flex-shrink:0;
+}
+.lobby-player-count {
+  font-family:var(--font); font-weight:900; font-size:1.1rem;
+  color:rgba(255,255,255,0.9); display:flex; align-items:center; gap:8px;
+}
+.lobby-title {
+  font-family:var(--font); font-weight:900; font-size:1.8rem;
+  color:#fff; letter-spacing:-0.5px; text-align:center;
+}
+.lobby-title span { color:var(--yellow); }
+.lobby-start-btn {
+  background:#fff; color:#1a1440; border:3px solid #E8422A;
+  border-radius:var(--radius-sm); padding:0.6rem 1.6rem;
+  font-family:var(--font); font-weight:900; font-size:1rem;
+  cursor:pointer; transition:transform 0.1s, box-shadow 0.15s;
+  box-shadow:0 4px 0 #c0392b;
+}
+.lobby-start-btn:hover { transform:translateY(-2px); box-shadow:0 6px 0 #c0392b; }
+.lobby-start-btn:active { transform:translateY(2px); box-shadow:0 2px 0 #c0392b; }
+.lobby-start-btn:disabled { opacity:0.5; cursor:default; box-shadow:none; transform:none; }
+.lobby-code-strip {
+  text-align:center; margin-bottom:0.5rem;
+  font-family:var(--font); font-weight:700; font-size:0.85rem;
+  color:rgba(255,255,255,0.7); letter-spacing:0.05em;
+}
+.lobby-code-strip strong { color:#fff; font-size:1.1rem; letter-spacing:0.2em; }
+
+.lobby-player-grid {
+  flex:1; overflow-y:auto; padding:0.5rem 2rem 1.5rem;
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+  gap:12px; align-content:start;
+}
+.lobby-player-card {
+  background:#fff; border-radius:var(--radius-sm);
+  display:flex; align-items:center; gap:12px;
+  padding:10px 16px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.12);
+  animation:card-pop 0.2s ease-out;
+}
+@keyframes card-pop { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+.lobby-player-card .lp-avatar {
+  width:44px; height:44px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:22px;
+}
+.lobby-player-card .lp-name {
+  font-family:var(--font); font-weight:800; font-size:1rem; color:#1a1440; flex:1;
+}
+.lobby-player-card .lp-kick {
+  background:none; border:none; cursor:pointer; color:#ccc; font-size:14px;
+  padding:2px 4px; border-radius:4px; transition:color 0.12s, background 0.12s;
+}
+.lobby-player-card .lp-kick:hover { color:#c0392b; background:#ffe5e5; }
+
+/* Settings drawer */
+.lobby-settings-toggle {
+  text-align:center; padding:0.5rem;
+  font-family:var(--font); font-weight:700; font-size:12px;
+  color:rgba(255,255,255,0.7); cursor:pointer; flex-shrink:0;
+}
+.lobby-settings-toggle:hover { color:#fff; }
+.lobby-settings-drawer {
+  background:rgba(0,0,0,0.2); padding:0 2rem 1rem;
+  flex-shrink:0; display:none;
+  max-height:50vh; overflow-y:auto;
+}
+.lobby-settings-drawer.open { display:block; }
+.lobby-settings-drawer .section-title { color:rgba(255,255,255,0.8); margin-bottom:0.5rem; }
+.lobby-settings-drawer .mode-card { background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.2); }
+.lobby-settings-drawer .mode-card .mode-name { color:#fff; }
+.lobby-settings-drawer .mode-card .mode-desc { color:rgba(255,255,255,0.7); }
+.lobby-settings-drawer .mode-card.selected { background:rgba(255,255,255,0.3); border-color:#fff; }
+
 /* ── KICK BUTTON ────────────────────────────────────── */
 .kick-btn { padding:4px 10px; border-radius:6px; border:1.5px solid #ffe5e5; background:transparent; font-size:11px; font-weight:700; cursor:pointer; color:#c0392b; transition:background 0.12s; margin-left:auto; }
 .kick-btn:hover { background:#ffe5e5; }
@@ -725,72 +808,60 @@ body {
         </div>
       </div>
 
-      <!-- Step: host setup (mode + set picker, shown AFTER lobby created) -->
-      <div id="step-host-setup" style="display:none">
-        <div class="page-header"><h2>Set up your game</h2><p>Choose a mode and question set, then share your code.</p></div>
-
-        <div class="lobby-code-box" style="margin-bottom:1.25rem">
-          <div class="code-label">Room code — share this now</div>
-          <div class="lobby-code-big" id="lobby-code">----</div>
-          <p>Players can join while you set up</p>
+      <!-- Step: host setup -->
+      <div id="step-host-setup" class="lobby-fullscreen" style="display:none">
+        <!-- Top bar -->
+        <div class="lobby-topbar">
+          <div class="lobby-player-count"><span id="lobby-pcount">0</span> 👤</div>
+          <div>
+            <div class="lobby-title">Quiz<span>zly</span></div>
+            <div class="lobby-code-strip">Code: <strong id="lobby-code">----</strong></div>
+          </div>
+          <button class="lobby-start-btn" id="start-btn" onclick="startGame()" disabled>Start</button>
         </div>
 
-        <div class="section-title" style="font-size:13px;margin-bottom:0.75rem">Game mode</div>
-        <div class="mode-cards" style="margin-bottom:1.25rem;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
-          <div class="mode-card selected" id="gm-classic" onclick="pickMode('classic')">
-            <div class="mode-emoji">🎯</div>
-            <div class="mode-name">Classic</div>
-            <div class="mode-desc">Answer at your own pace</div>
+        <!-- Settings toggle -->
+        <div class="lobby-settings-toggle" onclick="toggleLobbySettings()">⚙️ Settings (mode, duration, set) ▾</div>
+        <div class="lobby-settings-drawer" id="lobby-settings-drawer">
+          <div class="section-title" style="font-size:13px;margin-bottom:0.75rem;margin-top:0.75rem">Game mode</div>
+          <div class="mode-cards" style="margin-bottom:1rem;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">
+            <div class="mode-card selected" id="gm-classic" onclick="pickMode('classic')">
+              <div class="mode-emoji">🎯</div><div class="mode-name">Classic</div><div class="mode-desc">Answer at your own pace</div>
+            </div>
+            <div class="mode-card" id="gm-saboteur" onclick="pickMode('saboteur')">
+              <div class="mode-emoji">🔪</div><div class="mode-name">Saboteur</div><div class="mode-desc">One traitor, find them out</div>
+            </div>
+            <div class="mode-card" id="gm-powerups" onclick="pickMode('powerups')">
+              <div class="mode-emoji">🛒</div><div class="mode-name">Power-ups</div><div class="mode-desc">Spend points on abilities</div>
+            </div>
           </div>
-          <div class="mode-card" id="gm-saboteur" onclick="pickMode('saboteur')">
-            <div class="mode-emoji">🔪</div>
-            <div class="mode-name">Saboteur</div>
-            <div class="mode-desc">One traitor, find them out</div>
+          <div class="section-title" style="font-size:13px;margin-bottom:0.75rem">Duration</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:1rem">
+            <div class="mode-cards" style="margin:0;grid-template-columns:repeat(4,auto);flex-shrink:0">
+              <div class="mode-card" id="dur-60" onclick="pickDuration(60)" style="padding:0.5rem 0.9rem;min-width:64px"><div class="mode-name">1 min</div></div>
+              <div class="mode-card selected" id="dur-120" onclick="pickDuration(120)" style="padding:0.5rem 0.9rem;min-width:64px"><div class="mode-name">2 min</div></div>
+              <div class="mode-card" id="dur-180" onclick="pickDuration(180)" style="padding:0.5rem 0.9rem;min-width:64px"><div class="mode-name">3 min</div></div>
+              <div class="mode-card" id="dur-300" onclick="pickDuration(300)" style="padding:0.5rem 0.9rem;min-width:64px"><div class="mode-name">5 min</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);border-radius:var(--radius-sm);padding:0.35rem 0.75rem;flex-shrink:0" id="dur-custom-wrap">
+              <span style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap">Custom:</span>
+              <input type="number" id="dur-custom" min="1" max="60" placeholder="min" style="width:50px;border:none;outline:none;font-size:14px;font-family:var(--font);font-weight:700;color:#fff;background:transparent;padding:0" oninput="pickCustomDuration(this.value)">
+              <span style="font-size:13px;color:rgba(255,255,255,0.7)">min</span>
+            </div>
           </div>
-          <div class="mode-card" id="gm-powerups" onclick="pickMode('powerups')">
-            <div class="mode-emoji">🛒</div>
-            <div class="mode-name">Power-ups</div>
-            <div class="mode-desc">Spend points on abilities</div>
+          <div class="section-title" style="font-size:13px;margin-bottom:0.75rem">Question set</div>
+          <div id="setup-set-picker" style="margin-bottom:1rem">
+            <div class="mode-card selected" id="set-default" onclick="pickSet('__default__')" style="text-align:left;display:flex;align-items:center;gap:12px;padding:0.9rem">
+              <div style="font-size:1.3rem">📋</div>
+              <div><div class="mode-name">Default set</div><div class="mode-desc">Built-in 10 questions</div></div>
+            </div>
+            <div id="setup-mysets-list" style="display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
           </div>
+          <button class="action-btn ghost" style="background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.3);color:#fff;margin-bottom:0.5rem" onclick="resetPlay()">Cancel / Leave</button>
         </div>
 
-        <div class="section-title" style="font-size:13px;margin-bottom:0.75rem">Game duration</div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:1.25rem">
-          <div class="mode-cards" style="margin:0;grid-template-columns:repeat(4,auto);flex-shrink:0">
-            <div class="mode-card" id="dur-60" onclick="pickDuration(60)" style="padding:0.6rem 1rem;min-width:70px">
-              <div class="mode-name">1 min</div>
-            </div>
-            <div class="mode-card selected" id="dur-120" onclick="pickDuration(120)" style="padding:0.6rem 1rem;min-width:70px">
-              <div class="mode-name">2 min</div>
-            </div>
-            <div class="mode-card" id="dur-180" onclick="pickDuration(180)" style="padding:0.6rem 1rem;min-width:70px">
-              <div class="mode-name">3 min</div>
-            </div>
-            <div class="mode-card" id="dur-300" onclick="pickDuration(300)" style="padding:0.6rem 1rem;min-width:70px">
-              <div class="mode-name">5 min</div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;background:#fff;border:2px solid #e8e4ff;border-radius:var(--radius-sm);padding:0.4rem 0.75rem;flex-shrink:0" id="dur-custom-wrap">
-            <span style="font-size:13px;font-weight:700;color:#4a4a6a;white-space:nowrap">Custom:</span>
-            <input type="number" id="dur-custom" min="1" max="60" placeholder="min" style="width:56px;border:none;outline:none;font-size:15px;font-family:var(--font);font-weight:700;color:#1a1440;background:transparent;padding:0" oninput="pickCustomDuration(this.value)">
-            <span style="font-size:13px;color:#6b6b8a">min</span>
-          </div>
-        </div>
-
-        <div class="section-title" style="font-size:13px;margin-bottom:0.75rem">Question set</div>
-        <div id="setup-set-picker" style="margin-bottom:1.25rem">
-          <div class="mode-card selected" id="set-default" onclick="pickSet('__default__')" style="text-align:left;display:flex;align-items:center;gap:12px;padding:1rem">
-            <div style="font-size:1.5rem">📋</div>
-            <div><div class="mode-name">Default set</div><div class="mode-desc">Built-in 10 questions</div></div>
-          </div>
-          <div id="setup-mysets-list" style="display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
-        </div>
-
-        <div class="section-title" style="font-size:13px;margin-bottom:0.5rem">Players joined</div>
-        <div class="player-list" id="host-player-list" style="margin-bottom:1.25rem"></div>
-
-        <button class="action-btn" id="start-btn" onclick="startGame()" disabled>Start game</button>
-        <button class="action-btn ghost" onclick="resetPlay()">Cancel</button>
+        <!-- Player grid -->
+        <div class="lobby-player-grid" id="host-player-list"></div>
       </div>
 
 
@@ -1594,22 +1665,36 @@ function av(name) {
 
 function renderLobby() {
   const players = Object.values(room.players);
-  const html = players.map(p => {
-    const kickBtn = (isHost && p.name !== myName) ? `<button class="kick-btn" onclick="kickPlayer('${p.id}')">Kick</button>` : "";
-    return `<div class="player-row">${makeAvatarEl(p)}<span class="player-name">${p.name}${p.name===myName?" (you)":""}</span><span class="player-pts">${p.score} pts</span>${kickBtn}</div>`;
-  }).join("");
   if (isHost) {
-    const listEl = document.getElementById("host-player-list");
-    if (listEl) listEl.innerHTML = html;
-    const btn = document.getElementById("start-btn");
-    if (btn) {
-      btn.disabled = players.length < 1;
-      btn.textContent = players.length < 1 ? "Waiting for players..." : `Start game — ${players.length} player${players.length !== 1 ? "s" : ""}`;
+    // Big card grid view
+    const gridEl = document.getElementById("host-player-list");
+    if (gridEl) {
+      gridEl.innerHTML = players.map(p => {
+        const color = (p.avatar && p.avatar.color) || "#4f3de8";
+        const emoji = (p.avatar && p.avatar.emoji) || "🎮";
+        const kick = p.name !== myName
+          ? `<button class="lp-kick" onclick="kickPlayer('${p.id}')" title="Kick">✕</button>` : "";
+        return `<div class="lobby-player-card">
+          <div class="lp-avatar" style="background:${color}">${emoji}</div>
+          <span class="lp-name">${esc(p.name)}</span>
+          ${kick}
+        </div>`;
+      }).join("");
     }
+    const countEl = document.getElementById("lobby-pcount");
+    if (countEl) countEl.textContent = players.length;
+    const btn = document.getElementById("start-btn");
+    if (btn) btn.disabled = players.length < 1;
   } else {
+    // Player lobby — simple list
+    const html = players.map(p => `<div class="player-row">${makeAvatarEl(p)}<span class="player-name">${p.name}${p.name===myName?" (you)":""}</span><span class="player-pts">${p.score} pts</span></div>`).join("");
     document.getElementById("join-player-list").innerHTML = html;
   }
   if (room.status === "playing") renderGameQ();
+}
+
+function toggleLobbySettings() {
+  document.getElementById("lobby-settings-drawer").classList.toggle("open");
 }
 
 function startGame() {
