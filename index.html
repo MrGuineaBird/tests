@@ -813,7 +813,7 @@ body {
             <div class="mode-desc">Enter a room code to jump in</div>
           </div>
         </div>
-        <div id="form-host">
+        <div id="form-host" style="display:block">
           <div class="form-group"><label>Your name</label><input type="text" id="host-name" placeholder="Enter your name" maxlength="20"></div>
           <div class="form-group"><label>Choose your avatar</label><button class="avatar-picker-btn" onclick="openEmojiPicker('host')" type="button"><div class="avatar-preview-circle" id="avatar-preview-host" style="background:#4f3de8">🎮</div><span class="avatar-picker-label" id="avatar-label-host">Click to choose</span><span class="avatar-picker-arrow">▾</span></button></div></div>
           <button class="action-btn" onclick="hostGame()">Create lobby</button>
@@ -1469,6 +1469,7 @@ function esc(str) {
 // Init renders
 renderMySets();
 renderFavs();
+pickRole("host"); // ensure correct initial state
 
 document.getElementById("nav-creator").addEventListener("click", () => openCreator());
 
@@ -2369,7 +2370,7 @@ function clearImg(qid) {
 
 // ── LOBBY MUSIC ────────────────────────────────────────────────────────────
 // Drop your audio file src here — mp3, ogg, or a URL
-const LOBBY_MUSIC_SRC = ""; // e.g. "lobby.mp3" or a full URL
+const LOBBY_MUSIC_SRC = "lobby.ogg"; // e.g. "lobby.mp3" or a full URL
 
 function startLobbyMusic() {
   const el = document.getElementById("lobby-music");
