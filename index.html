@@ -936,7 +936,7 @@ body {
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────
-const WS_URL = "wss://quizzlyapi.kyklos.online"; // replace with your server URL
+const WS_URL = "wss://quizzlyapi.kyklos.online";
 
 const QUESTIONS = [
   {q:"What is the capital of France?",a:"Paris",opts:["Paris","London","Berlin","Madrid"]},
@@ -1343,12 +1343,22 @@ function connect() {
 }
 
 let intentionalDisconnect = false;
+let lobbyMusicPending = false;
 
 window.addEventListener("beforeunload", () => {
   intentionalDisconnect = true;
-  // Explicitly close WS so server gets the close event immediately
   if (ws && ws.readyState === WebSocket.OPEN) ws.close();
 });
+
+// Unlock audio on first user interaction and retry pending lobby music
+document.addEventListener("click", () => {
+  const el = document.getElementById("lobby-music");
+  if (el && el.paused && lobbyMusicPending && LOBBY_MUSIC_SRC && !muted) {
+    el.play().catch(() => {});
+  }
+  // Also resume Web Audio context if suspended
+  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+}, { once: false });
 
 // Also handle visibility — if the tab is hidden for too long treat as gone
 // (optional, not doing this to avoid false positives on mobile)
@@ -2076,17 +2086,23 @@ function clearImg(qid) {
 
 // ── LOBBY MUSIC ────────────────────────────────────────────────────────────
 // Drop your audio file src here — mp3, ogg, or a URL
-const LOBBY_MUSIC_SRC = "lobby.mp3"; // e.g. "lobby.mp3" or a full URL
+const LOBBY_MUSIC_SRC = ""; // e.g. "lobby.mp3" or a full URL
 
 function startLobbyMusic() {
   const el = document.getElementById("lobby-music");
   if (!el || !LOBBY_MUSIC_SRC || muted) return;
-  el.src = LOBBY_MUSIC_SRC;
+  if (el.src !== location.origin + "/" + LOBBY_MUSIC_SRC && !el.src.startsWith("blob")) {
+    el.src = LOBBY_MUSIC_SRC;
+  }
   el.volume = 0.5;
-  el.play().catch(() => {}); // catch autoplay block silently
+  lobbyMusicPending = true;
+  el.play().catch(() => {
+    // Autoplay blocked — will retry on next user click
+  });
 }
 
 function stopLobbyMusic() {
+  lobbyMusicPending = false;
   const el = document.getElementById("lobby-music");
   if (!el) return;
   el.pause();
@@ -2263,197 +2279,6 @@ function scheduleBgLoop() {
 
 connect();
 checkUrlSet();
-
-
-// ── HELPERS ───────────────────────────────────────────────────────────────
-function showStep(id) {
-  ["step-role","step-host-setup","step-solo-setup","step-lobby-join","step-game","step-results"].forEach(s => {
-    document.getElementById(s).style.display = s === id ? "block" : "none";
-  });
-  const sidebar = document.getElementById("sidebar");
-  const main = document.getElementById("main");
-  const inGame = id === "step-game";
-  if (sidebar) sidebar.style.transform = inGame ? "translateX(-220px)" : "";
-  if (main) main.style.marginLeft = inGame ? "0" : "";
-}
-
-function showHostEndedMsg() {
-  if (isHost) return; // host knows they left
-  showStep("step-results");
-  document.getElementById("res-title").textContent = "Game ended";
-  document.getElementById("res-score").textContent = myScore;
-  document.getElementById("res-sub").textContent = "The host closed the game.";
-  document.getElementById("standings-list").innerHTML = "";
-  room = null;
-}
-
-function resetPlay() {
-  stopClientTimer();
-  stopBgMusic();
-  stopLobbyMusic();
-  myId=null;myName="";roomCode="";isHost=false;myScore=0;answered=false;room=null;lastQ=-1;
-  iAmSaboteur=false;mySaboteurAnswer=null;calledOut=false;
-  streak=0;updateStreakDisplay();
-  const rb=document.getElementById("reaction-bar");if(rb)rb.style.display="none";
-  selectedMode="classic";selectedSetId="__default__";selectedDuration=120;
-  document.getElementById("host-name").value="";
-  document.getElementById("join-name").value="";
-  document.getElementById("join-code").value="";
-  document.getElementById("host-err").textContent="";
-  document.getElementById("join-err").textContent="";
-  showStep("step-role");
-  pickRole("host");
-}
-
-function genId() { return Math.random().toString(36).slice(2,10); }
-function genCode() { return String(Math.floor(1000+Math.random()*9000)); }
-function shuffle(a) { return [...a].sort(()=>Math.random()-0.5); }
-
-
-
-function pickSoloDuration(d) {
-  soloDuration = d;
-  [60,120,180,300].forEach(x => {
-    const el = document.getElementById("sdur-"+x);
-    if (el) el.classList.toggle("selected", x === d);
-  });
-  const ci = document.getElementById("sdur-custom");
-  if (ci) ci.value = "";
-}
-
-function pickSoloCustomDuration(val) {
-  const mins = parseInt(val);
-  if (!mins || mins < 1) return;
-  soloDuration = Math.min(mins, 60) * 60;
-  [60,120,180,300].forEach(x => {
-    const el = document.getElementById("sdur-"+x);
-    if (el) el.classList.remove("selected");
-  });
-}
-
-function openSoloSetup(setId) {
-  soloSetId = setId;
-  soloDuration = 120; pickSoloDuration(120);
-  const set = (setId === "__default__")
-    ? { title: "Default set", questions: QUESTIONS }
-    : loadSets().find(s => s.id === setId);
-  if (!set) return;
-  document.getElementById("solo-set-title").textContent = set.title;
-  document.getElementById("solo-set-desc").textContent = set.questions.length + " questions — loops until time runs out";
-  navTo("play", null);
-  showStep("step-solo-setup");
-}
-
-function resetSolo() {
-  soloSetId = null; soloScore = 0; soloCorrect = 0; soloTotal = 0;
-  soloQIdx = 0; soloAnswered = false;
-  if (soloTimer) { clearInterval(soloTimer); soloTimer = null; }
-}
-
-function startSolo() {
-  const set = (!soloSetId || soloSetId === "__default__")
-    ? { questions: QUESTIONS }
-    : loadSets().find(s => s.id === soloSetId);
-  if (!set) return;
-  soloQuestions = shuffle([...set.questions]);
-  soloQIdx = 0; soloScore = 0; soloCorrect = 0; soloTotal = 0; soloAnswered = false;
-  soloTimeLeft = soloDuration;
-  showStep("step-game");
-  document.getElementById("host-game-view").style.display = "none";
-  document.getElementById("player-game-view").style.display = "none";
-  document.getElementById("solo-game-view").style.display = "block";
-  document.getElementById("play-score").textContent = 0;
-  document.getElementById("play-score").parentElement.style.display = "";
-  if (!room) room = { duration: soloDuration }; else room.duration = soloDuration;
-  renderSoloQ();
-  updateCountdown(soloTimeLeft);
-  if (soloTimer) clearInterval(soloTimer);
-  soloTimer = setInterval(() => {
-    soloTimeLeft = Math.max(0, soloTimeLeft - 1);
-    updateCountdown(soloTimeLeft);
-    if (soloTimeLeft <= 0) { clearInterval(soloTimer); soloTimer = null; endSolo(); }
-  }, 1000);
-}
-
-function renderSoloQ() {
-  const q = soloQuestions[soloQIdx];
-  document.getElementById("play-q-label").textContent = "Question " + (soloQIdx + 1);
-  const qEl = document.getElementById("play-q-text");
-  if (q.qhtml) { qEl.innerHTML = q.qhtml; } else { qEl.textContent = q.q; }
-  document.getElementById("q-counter").textContent = soloQIdx + 1;
-  document.getElementById("solo-feedback").style.display = "none";
-  soloAnswered = false;
-  const grid = document.getElementById("solo-ans-grid");
-  grid.innerHTML = "";
-  shuffle(q.opts).forEach(opt => {
-    const b = document.createElement("button");
-    b.className = "ans-btn"; b.textContent = opt;
-    b.onclick = () => submitSoloAns(b, opt, q.a);
-    grid.appendChild(b);
-  });
-}
-
-function submitSoloAns(btn, chosen, correct) {
-  if (soloAnswered) return;
-  soloAnswered = true; soloTotal++;
-  const ok = chosen === correct;
-  btn.classList.add(ok ? "correct" : "wrong");
-  if (ok) { soloScore += 100; soloCorrect++; }
-  else document.querySelectorAll("#solo-ans-grid .ans-btn").forEach(b => { if (b.textContent === correct) b.classList.add("reveal"); });
-  document.querySelectorAll("#solo-ans-grid .ans-btn").forEach(b => b.disabled = true);
-  document.getElementById("play-score").textContent = soloScore;
-  const fb = document.getElementById("solo-feedback");
-  fb.className = "feedback-box " + (ok ? "fb-correct" : "fb-wrong");
-  fb.textContent = ok ? "✓ Correct! +100" : "✗ Wrong — " + correct;
-  fb.style.display = "block";
-  setTimeout(() => {
-    if (soloTimeLeft <= 0) return;
-    soloQIdx++;
-    if (soloQIdx >= soloQuestions.length) { soloQIdx = 0; soloQuestions = shuffle(soloQuestions); }
-    renderSoloQ();
-  }, 1000);
-}
-
-function endSolo() {
-  showStep("step-results");
-  const pct = soloTotal > 0 ? Math.round((soloCorrect / soloTotal) * 100) : 0;
-  document.getElementById("res-title").textContent = "Solo complete!";
-  document.getElementById("res-score").textContent = soloScore;
-  document.getElementById("res-sub").textContent = soloCorrect + " / " + soloTotal + " correct — " + pct + "% accuracy";
-  document.getElementById("standings-list").innerHTML = `
-    <div class="rank-row me">
-      <div class="rank-num">🏆</div>
-      <div class="avatar" style="background:#ebe9fd;color:#4f3de8">ME</div>
-      <div class="rank-name">You</div>
-      <div class="rank-score">${soloScore} pts</div>
-    </div>`;
-  saveGameStats(soloScore, soloTotal);
-  resetSolo();
-}
-
-// ── SHAREABLE LINK ──────────────────────────────────────────────────────────────
-function copySoloLink(setId, btn) {
-  const url = location.origin + location.pathname + "?set=" + setId;
-  navigator.clipboard.writeText(url).then(() => {
-    const orig = btn.textContent;
-    btn.textContent = "Copied!";
-    setTimeout(() => btn.textContent = orig, 1500);
-  }).catch(() => prompt("Copy this link:", url));
-}
-
-function checkUrlSet() {
-  const params = new URLSearchParams(location.search);
-  const setId = params.get("set");
-  if (!setId) return;
-  if (setId === "__default__") { openSoloSetup("__default__"); return; }
-  const set = loadSets().find(s => s.id === setId);
-  if (set) {
-    openSoloSetup(setId);
-  } else {
-    navTo("play", null);
-    setTimeout(() => alert("This set wasn’t found in your browser. The link only works on the device where the set was created, or you need the set to be shared with you first."), 300);
-  }
-}
 
 connect();
 checkUrlSet();
