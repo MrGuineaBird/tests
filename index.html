@@ -833,12 +833,9 @@ const QUESTIONS = [
 ];
 
 const DISCOVER_SETS = [
-  {emoji:"🌍",bg:"#e8f4fd",title:"World Geography",count:"10 questions"},
-  {emoji:"🧬",bg:"#f0fff4",title:"Biology Basics",count:"10 questions"},
-  {emoji:"⚗️",bg:"#fff8e1",title:"Chemistry 101",count:"10 questions"},
-  {emoji:"📐",bg:"#fce4ec",title:"Math Fundamentals",count:"10 questions"},
-  {emoji:"🏛️",bg:"#f3e5f5",title:"Ancient History",count:"10 questions"},
-  {emoji:"💻",bg:"#e8eaf6",title:"Computer Science",count:"10 questions"},
+  {emoji:"❌",bg:"#e8f4fd",title:"67 quiz11! (skibidi)",count:"10 questions"},
+  {emoji:"❌",bg:"#e8f4fd",title:"why uhh bole best teacha",count:"10 questions"},
+  {emoji:"❌",bg:"#e8f4fd",title:"none of these work btw :sob:",count:"10 questions"},
 ];
 
 document.getElementById("discover-grid").innerHTML = DISCOVER_SETS.map(s => `
@@ -1222,16 +1219,39 @@ function handleMsg(msg) {
     return;
   }
   if (msg.type === "tick") {
-    updateCountdown(msg.timeLeft);
+    // Sync local timer to server time
+    clientTimeLeft = msg.timeLeft;
+    updateCountdown(clientTimeLeft);
     return;
   }
   if (msg.type === "update") {
     room = msg.room;
-    if (room.timeLeft !== undefined) updateCountdown(room.timeLeft);
-    if (room.status === "lobby") renderLobby();
-    if (room.status === "playing") renderGameQ();
-    if (room.status === "done") renderResults();
+    if (room.timeLeft !== undefined) {
+      clientTimeLeft = room.timeLeft;
+      updateCountdown(clientTimeLeft);
+    }
+    if (room.status === "lobby") { stopClientTimer(); renderLobby(); }
+    if (room.status === "playing") { startClientTimer(); renderGameQ(); }
+    if (room.status === "done") { stopClientTimer(); renderResults(); }
   }
+}
+
+// Client-side timer — runs locally for smooth countdown, synced by server ticks
+let clientTimeLeft = 0;
+let clientTimerInterval = null;
+
+function startClientTimer() {
+  if (clientTimerInterval) return; // already running
+  clientTimerInterval = setInterval(() => {
+    if (clientTimeLeft > 0) {
+      clientTimeLeft--;
+      updateCountdown(clientTimeLeft);
+    }
+  }, 1000);
+}
+
+function stopClientTimer() {
+  if (clientTimerInterval) { clearInterval(clientTimerInterval); clientTimerInterval = null; }
 }
 
 function updateCountdown(secs) {
@@ -1247,9 +1267,10 @@ function updateCountdown(secs) {
     pill.style.borderColor = secs <= 10 ? "#A32D2D" : secs <= 30 ? "#BA7517" : "";
   }
   // Progress bar = time elapsed / total duration
-  if (bar && room && room.duration) {
-    const pct = Math.round(((room.duration - secs) / room.duration) * 100);
-    bar.style.width = pct + "%";
+  const dur = (room && room.duration) || selectedDuration || soloDuration || 120;
+  if (bar && dur) {
+    const pct = Math.round(((dur - secs) / dur) * 100);
+    bar.style.width = Math.min(100, Math.max(0, pct)) + "%";
   }
 }
 
@@ -1509,6 +1530,7 @@ function showStep(id) {
 }
 
 function resetPlay() {
+  stopClientTimer();
   myId=null;myName="";roomCode="";isHost=false;myScore=0;answered=false;room=null;lastQ=-1;
   selectedMode="classic";selectedSetId="__default__";selectedDuration=120;
   document.getElementById("host-name").value="";
