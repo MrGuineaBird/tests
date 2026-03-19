@@ -1415,10 +1415,10 @@ function renderGameQ() {
     const allDone = answeredCount === players.length;
     document.getElementById("host-answered-count").textContent = `${answeredCount} / ${players.length} answered`;
     // In timed mode server auto-advances; in classic host clicks next
-    const isTimed = room.mode !== "classic" && room.mode !== "survival";
-    document.getElementById("play-next").style.display = (!isTimed && allDone) ? "block" : "none";
+    // Timer always handles advancing — host never needs to click next
+    document.getElementById("play-next").style.display = "none";
     const noteEl = document.getElementById("host-next-note");
-    if (noteEl) noteEl.style.display = (isTimed && allDone) ? "block" : "none";
+    if (noteEl) noteEl.style.display = allDone ? "block" : "none";
   } else {
     document.getElementById("host-game-view").style.display = "none";
     document.getElementById("player-game-view").style.display = "block";
