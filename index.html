@@ -219,7 +219,7 @@ body {
 .stat-card .stat-label { font-size: 12px; color: #6b6b8a; font-weight: 600; margin-top: 2px; }
 
 /* ── PLAY PAGE ───────────────────────────────────────── */
-.play-page-inner { max-width: 560px; }
+.play-page-inner { max-width: 100%; }
 
 .mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 1.5rem; }
 .mode-card {
@@ -448,13 +448,31 @@ body {
 .q-builder input:focus { border-color:var(--indigo); background:#fff; }
 .q-builder input.correct-input { border-color:#20c997; background:#f0fdf8; }
 .opts-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:#9b99b8; margin-bottom:8px; font-family:var(--font); }
-.opts-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.opts-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; max-width:100%; }
 .opt-wrap { display:flex; align-items:center; gap:6px; }
 .opt-marker { width:20px; height:20px; border-radius:50%; border:1.5px solid #e8e4ff; display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; font-size:10px; transition:background 0.15s, border-color 0.15s; }
 .opt-marker.correct { background:#20c997; border-color:#20c997; color:#fff; }
 .opt-wrap input { margin:0; flex:1; }
 .remove-q-btn { background:none; border:none; cursor:pointer; color:#c0c0d0; font-size:18px; padding:2px 6px; border-radius:6px; transition:color 0.15s, background 0.15s; }
 .remove-q-btn:hover { color:#c0392b; background:#ffe5e5; }
+
+/* Rich text editor */
+.rte-toolbar { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px; }
+.rte-btn { padding:4px 9px; border:1.5px solid #e8e4ff; border-radius:6px; background:#f8f7ff; font-size:13px; font-family:var(--font-body); cursor:pointer; color:#4a4a6a; transition:background 0.12s, border-color 0.12s; line-height:1.4; }
+.rte-btn:hover { background:var(--indigo-light); border-color:var(--indigo-mid); }
+.rte-btn.active { background:var(--indigo-light); border-color:var(--indigo); color:var(--indigo); }
+.rte-btn b { font-weight:900; }
+.rte-editor { min-height:64px; padding:9px 12px; border:1.5px solid #e8e4ff; border-radius:8px; font-size:14px; font-family:var(--font-body); color:#1a1440; background:#f8f7ff; outline:none; margin-bottom:8px; transition:border-color 0.15s; line-height:1.6; }
+.rte-editor:focus { border-color:var(--indigo); background:#fff; }
+.rte-editor:empty:before { content:attr(data-placeholder); color:#9b99b8; pointer-events:none; }
+.rte-editor table { border-collapse:collapse; width:100%; margin:6px 0; font-size:13px; }
+.rte-editor td, .rte-editor th { border:1.5px solid #c0bce8; padding:5px 8px; min-width:40px; }
+.rte-editor th { background:#ebe9fd; font-weight:700; }
+/* Question display in game */
+.q-text table { border-collapse:collapse; width:100%; margin:8px 0; font-size:14px; }
+.q-text td, .q-text th { border:1.5px solid #c0bce8; padding:6px 10px; }
+.q-text th { background:#ebe9fd; font-weight:700; }
+
 
 /* ── RESPONSIVE ──────────────────────────────────────── */
 @media (max-width: 600px) {
@@ -585,7 +603,7 @@ body {
         </div>
 
         <div class="section-title" style="font-size:13px;margin-bottom:0.75rem">Game mode</div>
-        <div class="mode-cards" style="margin-bottom:1.25rem">
+        <div class="mode-cards" style="margin-bottom:1.25rem;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
           <div class="mode-card selected" id="gm-classic" onclick="pickMode('classic')">
             <div class="mode-emoji">🎯</div>
             <div class="mode-name">Classic</div>
@@ -604,22 +622,25 @@ body {
         </div>
 
         <div class="section-title" style="font-size:13px;margin-bottom:0.75rem">Game duration</div>
-        <div class="mode-cards" style="margin-bottom:1.25rem;grid-template-columns:repeat(4,1fr)">
-          <div class="mode-card" id="dur-60" onclick="pickDuration(60)">
-            <div class="mode-emoji">⏱️</div>
-            <div class="mode-name">1 min</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:1.25rem">
+          <div class="mode-cards" style="margin:0;grid-template-columns:repeat(4,auto);flex-shrink:0">
+            <div class="mode-card" id="dur-60" onclick="pickDuration(60)" style="padding:0.6rem 1rem;min-width:70px">
+              <div class="mode-name">1 min</div>
+            </div>
+            <div class="mode-card selected" id="dur-120" onclick="pickDuration(120)" style="padding:0.6rem 1rem;min-width:70px">
+              <div class="mode-name">2 min</div>
+            </div>
+            <div class="mode-card" id="dur-180" onclick="pickDuration(180)" style="padding:0.6rem 1rem;min-width:70px">
+              <div class="mode-name">3 min</div>
+            </div>
+            <div class="mode-card" id="dur-300" onclick="pickDuration(300)" style="padding:0.6rem 1rem;min-width:70px">
+              <div class="mode-name">5 min</div>
+            </div>
           </div>
-          <div class="mode-card selected" id="dur-120" onclick="pickDuration(120)">
-            <div class="mode-emoji">⏱️</div>
-            <div class="mode-name">2 min</div>
-          </div>
-          <div class="mode-card" id="dur-180" onclick="pickDuration(180)">
-            <div class="mode-emoji">⏱️</div>
-            <div class="mode-name">3 min</div>
-          </div>
-          <div class="mode-card" id="dur-300" onclick="pickDuration(300)">
-            <div class="mode-emoji">⏱️</div>
-            <div class="mode-name">5 min</div>
+          <div style="display:flex;align-items:center;gap:8px;background:#fff;border:2px solid #e8e4ff;border-radius:var(--radius-sm);padding:0.4rem 0.75rem;flex-shrink:0" id="dur-custom-wrap">
+            <span style="font-size:13px;font-weight:700;color:#4a4a6a;white-space:nowrap">Custom:</span>
+            <input type="number" id="dur-custom" min="1" max="60" placeholder="min" style="width:56px;border:none;outline:none;font-size:15px;font-family:var(--font);font-weight:700;color:#1a1440;background:transparent;padding:0" oninput="pickCustomDuration(this.value)">
+            <span style="font-size:13px;color:#6b6b8a">min</span>
           </div>
         </div>
 
@@ -645,11 +666,18 @@ body {
       <div id="step-solo-setup" style="display:none">
         <div class="page-header"><h2 id="solo-set-title">Solo play</h2><p id="solo-set-desc">Questions loop until time runs out.</p></div>
         <div class="section-title" style="font-size:13px;margin-bottom:0.75rem">Duration</div>
-        <div class="mode-cards" style="margin-bottom:1.25rem;grid-template-columns:repeat(4,1fr)">
-          <div class="mode-card" id="sdur-60" onclick="pickSoloDuration(60)"><div class="mode-emoji">⏱️</div><div class="mode-name">1 min</div></div>
-          <div class="mode-card selected" id="sdur-120" onclick="pickSoloDuration(120)"><div class="mode-emoji">⏱️</div><div class="mode-name">2 min</div></div>
-          <div class="mode-card" id="sdur-180" onclick="pickSoloDuration(180)"><div class="mode-emoji">⏱️</div><div class="mode-name">3 min</div></div>
-          <div class="mode-card" id="sdur-300" onclick="pickSoloDuration(300)"><div class="mode-emoji">⏱️</div><div class="mode-name">5 min</div></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:1.25rem">
+          <div class="mode-cards" style="margin:0;grid-template-columns:repeat(4,auto)">
+            <div class="mode-card" id="sdur-60" onclick="pickSoloDuration(60)" style="padding:0.6rem 1rem;min-width:70px"><div class="mode-name">1 min</div></div>
+            <div class="mode-card selected" id="sdur-120" onclick="pickSoloDuration(120)" style="padding:0.6rem 1rem;min-width:70px"><div class="mode-name">2 min</div></div>
+            <div class="mode-card" id="sdur-180" onclick="pickSoloDuration(180)" style="padding:0.6rem 1rem;min-width:70px"><div class="mode-name">3 min</div></div>
+            <div class="mode-card" id="sdur-300" onclick="pickSoloDuration(300)" style="padding:0.6rem 1rem;min-width:70px"><div class="mode-name">5 min</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:#fff;border:2px solid #e8e4ff;border-radius:var(--radius-sm);padding:0.4rem 0.75rem">
+            <span style="font-size:13px;font-weight:700;color:#4a4a6a;white-space:nowrap">Custom:</span>
+            <input type="number" id="sdur-custom" min="1" max="60" placeholder="min" style="width:56px;border:none;outline:none;font-size:15px;font-family:var(--font);font-weight:700;color:#1a1440;background:transparent;padding:0" oninput="pickSoloCustomDuration(this.value)">
+            <span style="font-size:13px;color:#6b6b8a">min</span>
+          </div>
         </div>
         <button class="action-btn teal" onclick="startSolo()">Play solo</button>
         <button class="action-btn ghost" style="margin-top:8px" onclick="showStep('step-role');resetSolo()">Cancel</button>
@@ -760,7 +788,7 @@ body {
   <!-- SET CREATOR PAGE -->
   <div id="page-creator" class="page">
     <div class="page-header"><h2 id="creator-title">New set</h2><p>Stored locally in your browser. Only you can see it.</p></div>
-    <div style="max-width:600px">
+    <div style="max-width:100%">
       <div class="form-group">
         <label>Set title</label>
         <input type="text" id="set-title" placeholder="e.g. World Capitals" maxlength="60">
@@ -1013,11 +1041,49 @@ function editSet(id) {
   navTo("creator", document.getElementById("nav-creator"));
 }
 
+function rteToolbar(qid) {
+  const tools = [
+    { cmd:"bold",        label:"<b>B</b>",       title:"Bold" },
+    { cmd:"italic",      label:"<i>I</i>",       title:"Italic" },
+    { cmd:"underline",   label:"<u>U</u>",       title:"Underline" },
+    { cmd:"strikeThrough",label:"<s>S</s>",      title:"Strikethrough" },
+    { cmd:"insertUnorderedList", label:"&#8226; List", title:"Bullet list" },
+    { cmd:"insertOrderedList",   label:"1. List",      title:"Numbered list" },
+    { special:"table",   label:"&#9776; Table",  title:"Insert table" },
+    { special:"clear",   label:"&#10005; Clear", title:"Clear formatting" },
+  ];
+  return tools.map(t => {
+    if (t.special === "table") {
+      return `<button class="rte-btn" title="${t.title}" onmousedown="event.preventDefault();rteInsertTable('qt-${qid}')">${t.label}</button>`;
+    } else if (t.special === "clear") {
+      return `<button class="rte-btn" title="${t.title}" onmousedown="event.preventDefault();document.execCommand('removeFormat')">${t.label}</button>`;
+    }
+    return `<button class="rte-btn" title="${t.title}" onmousedown="event.preventDefault();document.execCommand('${t.cmd}')">${t.label}</button>`;
+  }).join("");
+}
+
+function rteInsertTable(editorId) {
+  const rows = parseInt(prompt("Rows?", "3")) || 3;
+  const cols = parseInt(prompt("Columns?", "3")) || 3;
+  let html = "<table>";
+  for (let r = 0; r < rows; r++) {
+    html += "<tr>";
+    for (let c = 0; c < cols; c++) {
+      html += r === 0 ? "<th>Header</th>" : "<td>Cell</td>";
+    }
+    html += "</tr>";
+  }
+  html += "</table><br>";
+  const el = document.getElementById(editorId);
+  if (el) { el.focus(); document.execCommand("insertHTML", false, html); }
+}
+
 function addQuestion(existing = null) {
   questionCount++;
   const qid = questionCount;
   const opts = existing ? existing.opts : ["", "", "", ""];
   const correctIdx = existing ? opts.indexOf(existing.a) : 0;
+  const existingHTML = existing ? (existing.qhtml || esc(existing.q || "")) : "";
 
   const div = document.createElement("div");
   div.className = "q-builder";
@@ -1027,7 +1093,8 @@ function addQuestion(existing = null) {
       <span class="q-builder-num">Question ${qid}</span>
       <button class="remove-q-btn" onclick="removeQuestion(${qid})" title="Remove">✕</button>
     </div>
-    <input type="text" id="qt-${qid}" placeholder="Question text" value="${esc(existing?.q || '')}">
+    <div class="rte-toolbar">${rteToolbar(qid)}</div>
+    <div class="rte-editor" id="qt-${qid}" contenteditable="true" data-placeholder="Question text...">${existingHTML}</div>
     <div class="opts-label">Answer options — click circle to mark correct</div>
     <div class="opts-grid">
       ${opts.map((o, i) => `
@@ -1037,7 +1104,6 @@ function addQuestion(existing = null) {
         </div>`).join("")}
     </div>`;
   document.getElementById("questions-list").appendChild(div);
-  // renumber all
   renumberQuestions();
 }
 
@@ -1080,7 +1146,9 @@ function saveSet() {
   const questions = [];
   for (const el of qEls) {
     const qid = el.id.replace("qb-", "");
-    const q = document.getElementById(`qt-${qid}`)?.value.trim();
+    const editor = document.getElementById(`qt-${qid}`);
+    const qhtml = editor ? editor.innerHTML.trim() : "";
+    const q = editor ? (editor.innerText || editor.textContent || "").trim() : "";
     if (!q) { errEl.textContent = "All questions need text."; return; }
     const opts = [];
     for (let i = 0; i < 4; i++) {
@@ -1089,7 +1157,7 @@ function saveSet() {
       opts.push(v);
     }
     const correctIdx = getCorrectIdx(qid);
-    questions.push({ q, a: opts[correctIdx], opts });
+    questions.push({ q, qhtml, a: opts[correctIdx], opts });
   }
 
   const sets = loadSets();
@@ -1203,6 +1271,25 @@ function pickDuration(d) {
     const el = document.getElementById("dur-"+x);
     if (el) el.classList.toggle("selected", x === d);
   });
+  // Clear custom input when preset selected
+  const ci = document.getElementById("dur-custom");
+  if (ci) ci.value = "";
+  const wrap = document.getElementById("dur-custom-wrap");
+  if (wrap) wrap.style.borderColor = "#e8e4ff";
+}
+
+function pickCustomDuration(val) {
+  const mins = parseInt(val);
+  if (!mins || mins < 1) return;
+  selectedDuration = Math.min(mins, 60) * 60;
+  // Deselect all presets
+  [60,120,180,300].forEach(x => {
+    const el = document.getElementById("dur-"+x);
+    if (el) el.classList.remove("selected");
+  });
+  // Highlight the custom box
+  const wrap = document.getElementById("dur-custom-wrap");
+  if (wrap) wrap.style.borderColor = "var(--indigo)";
 }
 
 function hostGame() {
@@ -1292,7 +1379,8 @@ function renderGameQ() {
   if (isNew) { answered = false; lastQ = room.currentQ; }
 
   document.getElementById("play-q-label").textContent = `Question ${room.currentQ + 1}`;
-  document.getElementById("play-q-text").textContent = q.q;
+  const qEl = document.getElementById("play-q-text");
+  if (q.qhtml) { qEl.innerHTML = q.qhtml; } else { qEl.textContent = q.q; }
   document.getElementById("q-counter").textContent = `${room.currentQ + 1}`;
   // progress bar driven by countdown timer via updateCountdown()
   document.getElementById("play-score").textContent = myScore;
@@ -1447,6 +1535,18 @@ function pickSoloDuration(d) {
     const el = document.getElementById("sdur-"+x);
     if (el) el.classList.toggle("selected", x === d);
   });
+  const ci = document.getElementById("sdur-custom");
+  if (ci) ci.value = "";
+}
+
+function pickSoloCustomDuration(val) {
+  const mins = parseInt(val);
+  if (!mins || mins < 1) return;
+  soloDuration = Math.min(mins, 60) * 60;
+  [60,120,180,300].forEach(x => {
+    const el = document.getElementById("sdur-"+x);
+    if (el) el.classList.remove("selected");
+  });
 }
 
 function openSoloSetup(setId) {
@@ -1496,7 +1596,8 @@ function startSolo() {
 function renderSoloQ() {
   const q = soloQuestions[soloQIdx];
   document.getElementById("play-q-label").textContent = "Question " + (soloQIdx + 1);
-  document.getElementById("play-q-text").textContent = q.q;
+  const qEl = document.getElementById("play-q-text");
+  if (q.qhtml) { qEl.innerHTML = q.qhtml; } else { qEl.textContent = q.q; }
   document.getElementById("q-counter").textContent = soloQIdx + 1;
   document.getElementById("solo-feedback").style.display = "none";
   soloAnswered = false;
