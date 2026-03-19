@@ -798,6 +798,7 @@ body {
       </div>
 
       <!-- Step: in game -->
+      <audio id="lobby-music" loop></audio>
       <div id="reaction-overlay"></div>
       <div id="streak-display"></div>
       <div id="step-game" style="display:none">
@@ -805,6 +806,7 @@ body {
           <div class="game-pill">Score <strong id="play-score">0</strong></div>
           <div class="game-pill" id="timer-pill" style="font-weight:800;min-width:70px;text-align:center">⏱ <span id="timer-display">2:00</span></div>
           <div class="game-pill">Q <span id="q-counter">?</span></div>
+          <button id="mute-btn" onclick="toggleMute()" style="background:#fff;border:2px solid #e8e4ff;border-radius:20px;padding:5px 12px;font-size:16px;cursor:pointer;transition:border-color 0.15s" title="Toggle sound">🔊</button>
         </div>
         <div class="progress-track"><div class="progress-bar" id="play-progress" style="width:0%;transition:width 1s linear"></div></div>
         <div class="question-card">
@@ -934,7 +936,7 @@ body {
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────
-const WS_URL = "wss://quizzlyapi.kyklos.online"; // replace with your server URL
+const WS_URL = "wss://quizzly.kyklos.online"; // replace with your server URL
 
 const QUESTIONS = [
   {q:"What is the capital of France?",a:"Paris",opts:["Paris","London","Berlin","Madrid"]},
@@ -1326,9 +1328,30 @@ function connect() {
   try {
     ws = new WebSocket(WS_URL);
     ws.onmessage = e => handleMsg(JSON.parse(e.data));
-    ws.onclose = () => setTimeout(connect, 3000);
+    ws.onclose = () => {
+      if (intentionalDisconnect) return;
+      // If we were in a game, show host-ended message instead of silently reconnecting
+      if (room && room.status === "playing") {
+        stopBgMusic();
+        stopClientTimer();
+        showHostEndedMsg();
+      }
+      setTimeout(connect, 3000);
+    };
   } catch(e) {}
 }
+
+let intentionalDisconnect = false;
+
+window.addEventListener("beforeunload", () => {
+  intentionalDisconnect = true;
+  // Explicitly close WS so server gets the close event immediately
+  if (ws && ws.readyState === WebSocket.OPEN) ws.close();
+});
+
+// Also handle visibility — if the tab is hidden for too long treat as gone
+// (optional, not doing this to avoid false positives on mobile)
+
 function sendMsg(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
 
 function handleMsg(msg) {
@@ -1338,6 +1361,7 @@ function handleMsg(msg) {
     isHost = true;
     showStep("step-host-setup");
     document.getElementById("lobby-code").textContent = roomCode;
+    startLobbyMusic();
     selectedMode = "classic";
     selectedSetId = "__default__";
     populateSetPicker();
@@ -1351,6 +1375,7 @@ function handleMsg(msg) {
     isHost = false;
     showStep("step-lobby-join");
     document.getElementById("join-code-display").textContent = roomCode;
+    startLobbyMusic();
     renderLobby();
     return;
   }
@@ -1381,6 +1406,7 @@ let clientTimeLeft = 0;
 let clientTimerInterval = null;
 
 function startClientTimer() {
+  stopLobbyMusic();
   if (clientTimerInterval) return; // already running
   clientTimerInterval = setInterval(() => {
     if (clientTimeLeft > 0) {
@@ -1406,6 +1432,8 @@ function updateCountdown(secs) {
     pill.style.color = secs <= 10 ? "#c0392b" : secs <= 30 ? "#856404" : "";
     pill.style.borderColor = secs <= 10 ? "#A32D2D" : secs <= 30 ? "#BA7517" : "";
   }
+  if (secs <= 10 && secs > 0) sfxTick(secs);
+  if (secs === 0) { sfxEnd(); stopBgMusic(); }
   // Progress bar = time elapsed / total duration
   const dur = (room && room.duration) || selectedDuration || soloDuration || 120;
   if (bar && dur) {
@@ -1538,7 +1566,9 @@ function renderGameQ() {
   document.getElementById("play-score").parentElement.style.display = isHost ? "none" : "";
   const q = room.questions[room.currentQ];
   const isNew = room.currentQ !== lastQ;
-  if (isNew) { answered = false; lastQ = room.currentQ; calledOut = false; }
+  if (isNew) { answered = false; lastQ = room.currentQ; calledOut = false;
+    if (!isHost) startBgMusic();
+  }
 
   document.getElementById("play-q-label").textContent = `Question ${room.currentQ + 1}`;
   const qEl = document.getElementById("play-q-text");
@@ -1624,10 +1654,13 @@ function submitAns(btn, chosen, correct) {
     const mult = streak >= 5 ? 2 : streak >= 3 ? 1.5 : 1;
     myScore += Math.round(100 * mult);
     updateStreakDisplay();
+    sfxCorrect(streak);
   } else {
     streak = 0;
     updateStreakDisplay();
+    sfxWrong();
   }
+  stopBgMusic();
   document.getElementById("play-score").textContent = myScore;
   const fb = document.getElementById("play-feedback");
   if (iAmSaboteur) {
@@ -1655,6 +1688,8 @@ function renderResults() {
   const rank = players.indexOf(me) + 1;
   document.getElementById("res-title").textContent = rank === 1 ? "You won! 🎉" : "Game over!";
   document.getElementById("res-score").textContent = myScore;
+  stopBgMusic();
+  setTimeout(() => rank === 1 ? sfxVictory() : sfxGameOver(), 300);
   document.getElementById("res-sub").textContent = `You placed #${rank} of ${players.length}`;
   const medals = ["🥇","🥈","🥉"];
   document.getElementById("standings-list").innerHTML = players.map((p,i) => `
@@ -1697,10 +1732,27 @@ function showStep(id) {
   ["step-role","step-host-setup","step-solo-setup","step-lobby-join","step-game","step-results"].forEach(s => {
     document.getElementById(s).style.display = s === id ? "block" : "none";
   });
+  const sidebar = document.getElementById("sidebar");
+  const main = document.getElementById("main");
+  const inGame = id === "step-game";
+  if (sidebar) sidebar.style.transform = inGame ? "translateX(-220px)" : "";
+  if (main) main.style.marginLeft = inGame ? "0" : "";
+}
+
+function showHostEndedMsg() {
+  if (isHost) return; // host knows they left
+  showStep("step-results");
+  document.getElementById("res-title").textContent = "Game ended";
+  document.getElementById("res-score").textContent = myScore;
+  document.getElementById("res-sub").textContent = "The host closed the game.";
+  document.getElementById("standings-list").innerHTML = "";
+  room = null;
 }
 
 function resetPlay() {
   stopClientTimer();
+  stopBgMusic();
+  stopLobbyMusic();
   myId=null;myName="";roomCode="";isHost=false;myScore=0;answered=false;room=null;lastQ=-1;
   iAmSaboteur=false;mySaboteurAnswer=null;calledOut=false;
   streak=0;updateStreakDisplay();
@@ -2017,6 +2069,194 @@ function clearImg(qid) {
   if (urlInput) urlInput.value = '';
   const fileInput = document.getElementById('qif-' + qid);
   if (fileInput) fileInput.value = '';
+}
+
+
+// ── LOBBY MUSIC ────────────────────────────────────────────────────────────
+// Drop your audio file src here — mp3, ogg, or a URL
+const LOBBY_MUSIC_SRC = ""; // e.g. "lobby.mp3" or a full URL
+
+function startLobbyMusic() {
+  const el = document.getElementById("lobby-music");
+  if (!el || !LOBBY_MUSIC_SRC || muted) return;
+  el.src = LOBBY_MUSIC_SRC;
+  el.volume = 0.5;
+  el.play().catch(() => {}); // catch autoplay block silently
+}
+
+function stopLobbyMusic() {
+  const el = document.getElementById("lobby-music");
+  if (!el) return;
+  el.pause();
+  el.currentTime = 0;
+}
+
+// ── AUDIO ENGINE ───────────────────────────────────────────────────────────
+let audioCtx = null;
+let bgMusicNodes = [];
+let muted = false;
+let bgPlaying = false;
+
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function toggleMute() {
+  muted = !muted;
+  const btn = document.getElementById('mute-btn');
+  if (btn) btn.textContent = muted ? '🔇' : '🔊';
+  if (muted) { stopBgMusic(); stopLobbyMusic(); }
+}
+
+// ── play a single tone ──────────────────────────────────────────────────────
+function playTone(freq, duration, type='sine', vol=0.18, delay=0, ctx=null) {
+  if (muted) return;
+  try {
+    const c = ctx || getCtx();
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.connect(gain); gain.connect(c.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, c.currentTime + delay);
+    gain.gain.setValueAtTime(0, c.currentTime + delay);
+    gain.gain.linearRampToValueAtTime(vol, c.currentTime + delay + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + delay + duration);
+    osc.start(c.currentTime + delay);
+    osc.stop(c.currentTime + delay + duration + 0.05);
+  } catch(e) {}
+}
+
+// ── SFX: correct answer ─────────────────────────────────────────────────────
+function sfxCorrect(streak) {
+  if (muted) return;
+  const base = streak >= 5 ? 660 : streak >= 3 ? 587 : 523;
+  playTone(base, 0.12, 'triangle', 0.22);
+  playTone(base * 1.5, 0.18, 'triangle', 0.18, 0.1);
+  if (streak >= 3) playTone(base * 2, 0.25, 'triangle', 0.15, 0.22);
+}
+
+// ── SFX: wrong answer ───────────────────────────────────────────────────────
+function sfxWrong() {
+  if (muted) return;
+  playTone(220, 0.08, 'sawtooth', 0.15);
+  playTone(185, 0.14, 'sawtooth', 0.12, 0.1);
+}
+
+// ── SFX: countdown ticks ────────────────────────────────────────────────────
+function sfxTick(secsLeft) {
+  if (muted) return;
+  const freq = secsLeft <= 5 ? 880 : 660;
+  const vol  = secsLeft <= 5 ? 0.20 : 0.10;
+  playTone(freq, 0.06, 'square', vol);
+}
+
+// ── SFX: game over ───────────────────────────────────────────────────────────
+function sfxEnd() {
+  if (muted) return;
+  [392, 349, 330, 294].forEach((f, i) => playTone(f, 0.22, 'sawtooth', 0.18, i * 0.18));
+}
+
+// ── SFX: victory fanfare ─────────────────────────────────────────────────────
+function sfxVictory() {
+  if (muted) return;
+  const melody = [523,659,784,1047,784,1047,1047];
+  const times  = [0, 0.12, 0.24, 0.36, 0.52, 0.64, 0.78];
+  melody.forEach((f, i) => playTone(f, i === 6 ? 0.6 : 0.14, 'triangle', 0.22, times[i]));
+}
+
+// ── SFX: game over fanfare ────────────────────────────────────────────────────
+function sfxGameOver() {
+  if (muted) return;
+  [523,494,466,440,415].forEach((f,i) => playTone(f, 0.28, 'sawtooth', 0.16, i * 0.15));
+}
+
+// ── BG MUSIC: looping tension music ─────────────────────────────────────────
+// A simple 8-bar loop using a bassline + hihat pattern + melody arp
+let bgLoop = null;
+let bgLoopStart = 0;
+const BG_BPM = 128;
+const BG_BEAT = 60 / BG_BPM;
+
+function startBgMusic() {
+  if (muted || bgPlaying) return;
+  bgPlaying = true;
+  scheduleBgLoop();
+}
+
+function stopBgMusic() {
+  bgPlaying = false;
+  bgMusicNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+  bgMusicNodes = [];
+}
+
+function scheduleBgLoop() {
+  if (!bgPlaying || muted) return;
+  try {
+    const c = getCtx();
+    const now = c.currentTime;
+    const b = BG_BEAT;
+
+    // Bassline: 16 steps, C minor feel
+    const bassNotes = [65,65,0,65, 58,58,0,58, 62,62,0,65, 58,0,65,0];
+    const bassLen = 16;
+    bassNotes.forEach((freq, i) => {
+      if (!freq) return;
+      const t = now + i * (b / 2);
+      const osc = c.createOscillator();
+      const g = c.createGain();
+      osc.connect(g); g.connect(c.destination);
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.10, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.001, t + (b / 2) * 0.85);
+      osc.start(t); osc.stop(t + b / 2);
+      bgMusicNodes.push(osc);
+    });
+
+    // Hihat pattern: 8th note pulses
+    for (let i = 0; i < bassLen; i++) {
+      const t = now + i * (b / 2);
+      const osc = c.createOscillator();
+      const g = c.createGain();
+      const filter = c.createBiquadFilter();
+      osc.connect(filter); filter.connect(g); g.connect(c.destination);
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(8000 + Math.random() * 2000, t);
+      filter.type = 'highpass'; filter.frequency.setValueAtTime(6000, t);
+      const hiVol = (i % 4 === 0) ? 0.07 : 0.03;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(hiVol, t + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+      osc.start(t); osc.stop(t + 0.05);
+      bgMusicNodes.push(osc);
+    }
+
+    // Melody arp: playful rising/falling
+    const arpNotes = [523,659,784,659,523,587,698,587];
+    arpNotes.forEach((freq, i) => {
+      const t = now + i * b;
+      const osc = c.createOscillator();
+      const g = c.createGain();
+      osc.connect(g); g.connect(c.destination);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.07, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + b * 0.7);
+      osc.start(t); osc.stop(t + b);
+      bgMusicNodes.push(osc);
+    });
+
+    const loopDuration = bassLen * (b / 2);
+    bgLoop = setTimeout(() => {
+      bgMusicNodes = [];
+      if (bgPlaying && !muted) scheduleBgLoop();
+    }, loopDuration * 1000 - 30);
+
+  } catch(e) { bgPlaying = false; }
 }
 
 connect();
