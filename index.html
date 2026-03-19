@@ -1785,7 +1785,7 @@ function renderGameQ() {
     // Timer always handles advancing — host never needs to click next
     document.getElementById("play-next").style.display = "none";
     const noteEl = document.getElementById("host-next-note");
-    if (noteEl) noteEl.style.display = allDone ? "block" : "none";
+    if (noteEl) noteEl.style.display = "none";
   } else {
     document.getElementById("host-game-view").style.display = "none";
     document.getElementById("player-game-view").style.display = "block";
@@ -1807,11 +1807,10 @@ function renderGameQ() {
       });
     }
 
-    const allDone = Object.values(room.players).every(p => p.answered);
-    if (allDone && answered) {
-      document.getElementById("play-wait").style.display = "none";
+    // Timer drives advancing — no auto-advance on all answered
+    if (answered) {
       const w = document.getElementById("play-wait");
-      w.textContent = "Waiting for host...";
+      w.textContent = "Waiting for next question...";
       w.style.display = "block";
     }
   }
