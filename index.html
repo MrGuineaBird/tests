@@ -578,6 +578,33 @@ body {
 .q-img-url:focus { border-color:var(--indigo); }
 .game-q-image { width:100%; max-height:240px; object-fit:contain; border-radius:var(--radius-sm); margin-bottom:0.75rem; display:block; }
 
+/* ── KICK BUTTON ────────────────────────────────────── */
+.kick-btn { padding:4px 10px; border-radius:6px; border:1.5px solid #ffe5e5; background:transparent; font-size:11px; font-weight:700; cursor:pointer; color:#c0392b; transition:background 0.12s; margin-left:auto; }
+.kick-btn:hover { background:#ffe5e5; }
+#shop-btn { display:none; position:fixed; bottom:20px; right:20px; z-index:300; background:var(--yellow); color:#1a1440; border:none; border-radius:50%; width:56px; height:56px; font-size:1.6rem; cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,0.25); transition:transform 0.1s; }
+#shop-btn:hover { transform:scale(1.1); }
+#shop-modal { display:none; position:fixed; inset:0; z-index:400; background:rgba(26,20,64,0.6); align-items:flex-end; justify-content:center; backdrop-filter:blur(3px); }
+#shop-modal.open { display:flex; }
+.shop-panel { background:#fff; border-radius:var(--radius) var(--radius) 0 0; padding:1.5rem; width:100%; max-width:520px; animation:slide-up 0.2s ease-out; }
+@keyframes slide-up { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.shop-title { font-family:var(--font); font-weight:900; font-size:1.1rem; margin-bottom:4px; }
+.shop-pts { font-size:13px; color:#6b6b8a; margin-bottom:1rem; }
+.shop-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:1rem; }
+.shop-item { background:#f8f7ff; border:2px solid #e8e4ff; border-radius:var(--radius-sm); padding:1rem; cursor:pointer; transition:border-color 0.15s, background 0.15s; text-align:center; }
+.shop-item:hover:not(.disabled) { border-color:var(--indigo); background:var(--indigo-light); }
+.shop-item.disabled { opacity:0.4; cursor:default; }
+.shop-item .pu-icon { font-size:1.8rem; margin-bottom:6px; }
+.shop-item .pu-name { font-family:var(--font); font-weight:800; font-size:14px; margin-bottom:3px; }
+.shop-item .pu-desc { font-size:11px; color:#6b6b8a; margin-bottom:6px; }
+.shop-item .pu-cost { font-family:var(--font); font-weight:900; font-size:13px; color:var(--indigo); }
+.shop-close { width:100%; padding:0.65rem; background:transparent; border:1.5px solid #e8e4ff; border-radius:var(--radius-sm); font-family:var(--font); font-weight:700; cursor:pointer; }
+#frozen-overlay { display:none; position:fixed; inset:0; z-index:350; background:rgba(61,111,224,0.7); align-items:center; justify-content:center; backdrop-filter:blur(6px); }
+#frozen-overlay.active { display:flex; }
+.frozen-box { text-align:center; color:#fff; }
+.frozen-box .frozen-emoji { font-size:4rem; }
+.frozen-box p { font-family:var(--font); font-weight:900; font-size:1.4rem; margin-top:0.5rem; }
+#double-indicator { display:none; position:fixed; top:140px; right:20px; z-index:200; background:#ffc926; color:#1a1440; font-family:var(--font); font-weight:900; font-size:1rem; padding:6px 14px; border-radius:20px; box-shadow:0 4px 12px rgba(0,0,0,0.2); animation:fire-pulse 0.8s ease-in-out infinite; }
+
 /* ── RESPONSIVE ──────────────────────────────────────── */
 @media (max-width: 600px) {
   :root { --sidebar-w: 0px; }
@@ -720,6 +747,11 @@ body {
             <div class="mode-name">Saboteur</div>
             <div class="mode-desc">One traitor, find them out</div>
           </div>
+          <div class="mode-card" id="gm-powerups" onclick="pickMode('powerups')">
+            <div class="mode-emoji">🛒</div>
+            <div class="mode-name">Power-ups</div>
+            <div class="mode-desc">Spend points on abilities</div>
+          </div>
         </div>
 
         <div class="section-title" style="font-size:13px;margin-bottom:0.75rem">Game duration</div>
@@ -853,6 +885,21 @@ body {
         </div>
       </div>
 
+
+      <button id="shop-btn" onclick="openShop()">🛒</button>
+      <div id="shop-modal"><div class="shop-panel">
+        <div class="shop-title">🛒 Power-up Shop</div>
+        <div class="shop-pts">Your points: <strong id="shop-score-display">0</strong></div>
+        <div class="shop-grid">
+          <div class="shop-item" id="pu-freeze" onclick="buyPowerup('freeze')"><div class="pu-icon">❄️</div><div class="pu-name">Freeze</div><div class="pu-desc">Block a player next question</div><div class="pu-cost">150 pts</div></div>
+          <div class="shop-item" id="pu-skip" onclick="buyPowerup('skip')"><div class="pu-icon">⏭️</div><div class="pu-name">Skip</div><div class="pu-desc">Auto-correct this question</div><div class="pu-cost">100 pts</div></div>
+          <div class="shop-item" id="pu-reveal" onclick="buyPowerup('reveal')"><div class="pu-icon">🔍</div><div class="pu-name">Reveal</div><div class="pu-desc">Remove one wrong answer</div><div class="pu-cost">75 pts</div></div>
+          <div class="shop-item" id="pu-double" onclick="buyPowerup('double')"><div class="pu-icon">🎯</div><div class="pu-name">Double</div><div class="pu-desc">Next correct = 2× points</div><div class="pu-cost">200 pts</div></div>
+        </div>
+        <button class="shop-close" onclick="closeShop()">Close</button>
+      </div></div>
+      <div id="frozen-overlay"><div class="frozen-box"><div class="frozen-emoji">❄️</div><p>You're frozen!</p></div></div>
+      <div id="double-indicator">🎯 2× next answer!</div>
       <!-- Step: results -->
       <div id="step-results" style="display:none">
         <div class="results-hero">
@@ -1407,6 +1454,8 @@ function handleMsg(msg) {
     if (room.status === "done") { stopClientTimer(); document.getElementById("reaction-bar").style.display="none"; renderResults(); }
   }
   if (msg.type === "reaction") { spawnReaction(msg.emoji, false); return; }
+  if (msg.type === "kicked") { stopBgMusic(); stopLobbyMusic(); stopClientTimer(); room=null; showStep("step-role"); pickRole("host"); alert("You were removed from the lobby."); return; }
+  if (msg.type === "powerup") { handlePowerupMsg(msg); return; }
   if (["saboteur_assign","saboteur_clear","callout_result","saboteur_exposed"].includes(msg.type)) {
     handleSaboteurMsg(msg);
   }
@@ -1503,7 +1552,7 @@ function hostGame() {
 
 function pickMode(m) {
   selectedMode = m;
-  ["classic","saboteur"].forEach(x => {
+  ["classic","saboteur","powerups"].forEach(x => {
     const el = document.getElementById("gm-"+x);
     if (el) el.classList.toggle("selected", x === m);
   });
@@ -1545,7 +1594,10 @@ function av(name) {
 
 function renderLobby() {
   const players = Object.values(room.players);
-  const html = players.map(p => `<div class="player-row">${makeAvatarEl(p)}<span class="player-name">${p.name}${p.name===myName?" (you)":""}</span><span class="player-pts">${p.score} pts</span></div>`).join("");
+  const html = players.map(p => {
+    const kickBtn = (isHost && p.name !== myName) ? `<button class="kick-btn" onclick="kickPlayer('${p.id}')">Kick</button>` : "";
+    return `<div class="player-row">${makeAvatarEl(p)}<span class="player-name">${p.name}${p.name===myName?" (you)":""}</span><span class="player-pts">${p.score} pts</span>${kickBtn}</div>`;
+  }).join("");
   if (isHost) {
     const listEl = document.getElementById("host-player-list");
     if (listEl) listEl.innerHTML = html;
@@ -1579,6 +1631,9 @@ function renderGameQ() {
   const isNew = room.currentQ !== lastQ;
   if (isNew) { answered = false; lastQ = room.currentQ; calledOut = false;
     if (!isHost) startBgMusic();
+    const _sb=document.getElementById("shop-btn"); if(_sb) _sb.style.display=(!isHost&&room&&room.mode==="powerups")?"block":"none";
+    const _fo=document.getElementById("frozen-overlay"); if(_fo) _fo.classList.remove("active");
+    if(typeof isFrozen!=="undefined") isFrozen=false;
   }
 
   document.getElementById("play-q-label").textContent = `Question ${room.currentQ + 1}`;
@@ -1592,6 +1647,8 @@ function renderGameQ() {
   }
   const rbar = document.getElementById("reaction-bar");
   if (rbar) rbar.style.display = "flex";
+  const shopBtn = document.getElementById("shop-btn");
+  if (shopBtn) shopBtn.style.display = (!isHost && room && room.mode === "powerups" && !answered) ? "block" : "none";
   document.getElementById("q-counter").textContent = `${room.currentQ + 1}`;
   // progress bar driven by countdown timer via updateCountdown()
   document.getElementById("play-score").textContent = myScore;
@@ -1660,10 +1717,12 @@ function submitAns(btn, chosen, correct) {
   btn.classList.add(reallyCorrect ? "correct" : "wrong");
   if (!reallyCorrect) document.querySelectorAll(".ans-btn").forEach(b => { if (b.textContent === correct) b.classList.add("reveal"); });
   document.querySelectorAll(".ans-btn").forEach(b => b.disabled = true);
+  const isDouble = activePowerups && activePowerups.double;
+  if (activePowerups && activePowerups.double) { activePowerups.double = false; const di=document.getElementById("double-indicator"); if(di) di.style.display="none"; }
   if (ok) {
     streak++;
-    const mult = streak >= 5 ? 2 : streak >= 3 ? 1.5 : 1;
-    myScore += Math.round(100 * mult);
+    const streakMult = streak >= 5 ? 2 : streak >= 3 ? 1.5 : 1;
+    myScore += Math.round(100 * (isDouble ? streakMult * 2 : streakMult));
     updateStreakDisplay();
     sfxCorrect(streak);
   } else {
@@ -1673,6 +1732,7 @@ function submitAns(btn, chosen, correct) {
   }
   stopBgMusic();
   document.getElementById("play-score").textContent = myScore;
+  const _sb2=document.getElementById("shop-btn"); if(_sb2)_sb2.style.display="none";
   const fb = document.getElementById("play-feedback");
   if (iAmSaboteur) {
     fb.className = "feedback-box " + (ok ? "fb-correct" : "fb-wrong");
@@ -1767,6 +1827,11 @@ function resetPlay() {
   stopLobbyMusic();
   myId=null;myName="";roomCode="";isHost=false;myScore=0;answered=false;room=null;lastQ=-1;
   iAmSaboteur=false;mySaboteurAnswer=null;calledOut=false;
+  if(typeof activePowerups!=="undefined") activePowerups={double:false};
+  if(typeof isFrozen!=="undefined") isFrozen=false;
+  const _rs1=document.getElementById("shop-btn");if(_rs1)_rs1.style.display="none";
+  const _rs2=document.getElementById("double-indicator");if(_rs2)_rs2.style.display="none";
+  const _rs3=document.getElementById("frozen-overlay");if(_rs3)_rs3.classList.remove("active");
   streak=0;updateStreakDisplay();
   const rb=document.getElementById("reaction-bar");if(rb)rb.style.display="none";
   selectedMode="classic";selectedSetId="__default__";selectedDuration=120;
@@ -2086,7 +2151,7 @@ function clearImg(qid) {
 
 // ── LOBBY MUSIC ────────────────────────────────────────────────────────────
 // Drop your audio file src here — mp3, ogg, or a URL
-const LOBBY_MUSIC_SRC = "lobby.ogg"; // e.g. "lobby.mp3" or a full URL
+const LOBBY_MUSIC_SRC = ""; // e.g. "lobby.mp3" or a full URL
 
 function startLobbyMusic() {
   const el = document.getElementById("lobby-music");
@@ -2275,6 +2340,93 @@ function scheduleBgLoop() {
     }, loopDuration * 1000 - 30);
 
   } catch(e) { bgPlaying = false; }
+}
+
+// ── KICK PLAYER ──────────────────────────────────────────────────────────────
+function kickPlayer(playerId) {
+  if (!isHost) return;
+  sendMsg({ type: "kick", code: roomCode, playerId });
+}
+
+// ── POWER-UPS ──────────────────────────────────────────────────────────────
+let activePowerups = { double: false };
+let isFrozen = false;
+
+function openShop() {
+  if (answered || isFrozen) return;
+  document.getElementById("shop-score-display").textContent = myScore;
+  const costs = { freeze:150, skip:100, reveal:75, double:200 };
+  Object.entries(costs).forEach(([pu, cost]) => {
+    const el = document.getElementById("pu-"+pu);
+    if (el) el.classList.toggle("disabled", myScore < cost);
+  });
+  document.getElementById("shop-modal").classList.add("open");
+}
+
+function closeShop() { document.getElementById("shop-modal").classList.remove("open"); }
+
+function buyPowerup(pu) {
+  const costs = { freeze:150, skip:100, reveal:75, double:200 };
+  const cost = costs[pu];
+  if (!cost || myScore < cost) return;
+  if (pu === "reveal") {
+    const btns = [...document.querySelectorAll(".ans-btn:not([disabled])")].filter(b => !b.classList.contains("saboteur-hint"));
+    const q = room.questions[room.currentQ];
+    const wrongBtns = btns.filter(b => b.textContent !== q.a);
+    if (wrongBtns.length === 0) return;
+    const target = wrongBtns[Math.floor(Math.random() * wrongBtns.length)];
+    target.style.opacity = "0.15"; target.disabled = true;
+    myScore -= cost; document.getElementById("play-score").textContent = myScore;
+    closeShop(); return;
+  }
+  if (pu === "skip") {
+    myScore -= cost; closeShop();
+    const q = room.questions[room.currentQ];
+    const correctBtn = [...document.querySelectorAll(".ans-btn")].find(b => b.textContent === q.a);
+    if (correctBtn && !answered) correctBtn.click();
+    return;
+  }
+  if (pu === "double") {
+    activePowerups.double = true;
+    myScore -= cost; document.getElementById("play-score").textContent = myScore;
+    document.getElementById("double-indicator").style.display = "block";
+    closeShop(); return;
+  }
+  if (pu === "freeze") {
+    const players = Object.entries(room.players).filter(([id]) => id !== myId);
+    if (players.length === 0) return;
+    const panel = document.getElementById("callout-panel");
+    const btnsEl = document.getElementById("callout-btns");
+    if (btnsEl && panel) {
+      btnsEl.innerHTML = `<div style="font-size:13px;font-weight:700;color:#1a1440;width:100%;margin-bottom:8px">❄️ Freeze who?</div>` +
+        players.map(([id,p]) => `<button class="callout-btn" onclick="confirmFreeze('${id}',${cost})">${esc(p.name)}</button>`).join("");
+      panel.style.display = "block";
+    }
+    closeShop(); return;
+  }
+}
+
+function confirmFreeze(targetId, cost) {
+  myScore -= cost; document.getElementById("play-score").textContent = myScore;
+  sendMsg({ type: "powerup", code: roomCode, pu: "freeze", targetId, senderId: myId });
+  const panel = document.getElementById("callout-panel"); if (panel) panel.style.display = "none";
+}
+
+function handlePowerupMsg(msg) {
+  if (msg.pu === "freeze" && msg.targetId === myId) {
+    isFrozen = true;
+    document.getElementById("frozen-overlay").classList.add("active");
+    document.querySelectorAll(".ans-btn").forEach(b => b.disabled = true);
+    setTimeout(() => {
+      isFrozen = false;
+      if (!answered) {
+        answered = true;
+        sendMsg({ type: "answer", code: roomCode, correct: false });
+        document.getElementById("frozen-overlay").classList.remove("active");
+        document.getElementById("play-wait").style.display = "block";
+      }
+    }, 2000);
+  }
 }
 
 connect();
