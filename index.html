@@ -1560,6 +1560,12 @@ function handleMsg(msg) {
     if (room.status === "done") { stopClientTimer(); document.getElementById("reaction-bar").style.display="none"; renderResults(); }
   }
   if (msg.type === "reaction") { spawnReaction(msg.emoji, false); return; }
+  if (msg.type === "next_question") {
+    myCurrentQ = msg.currentQ;
+    myScore = msg.score;
+    renderMyQuestion();
+    return;
+  }
   if (msg.type === "kicked") { stopBgMusic(); stopLobbyMusic(); stopClientTimer(); room=null; showStep("step-role"); pickRole("host"); alert("You were removed from the lobby."); return; }
   if (msg.type === "powerup") { handlePowerupMsg(msg); return; }
   if (["saboteur_assign","saboteur_clear","callout_result","saboteur_exposed"].includes(msg.type)) {
@@ -1750,7 +1756,7 @@ function renderGameQ() {
   const q = room.questions[room.currentQ];
   const isNew = room.currentQ !== lastQ;
   if (isNew) { answered = false; lastQ = room.currentQ; calledOut = false;
-    if (!isHost) startBgMusic();
+    if (!isHost) { startBgMusic(); myCurrentQ = room.currentQ || 0; }
     const _sb=document.getElementById("shop-btn"); if(_sb) _sb.style.display=(!isHost&&room&&room.mode==="powerups")?"block":"none";
     const _fo=document.getElementById("frozen-overlay"); if(_fo) _fo.classList.remove("active");
     if(typeof isFrozen!=="undefined") isFrozen=false;
@@ -1861,7 +1867,6 @@ function submitAns(btn, chosen, correct) {
     fb.textContent = ok ? "✓ Correct! +100" : `✗ Wrong — ${correct}`;
   }
   fb.style.display = "block";
-  document.getElementById("play-wait").style.display = "block";
   sendMsg({ type: "answer", code: roomCode, correct: ok, chosen, reallyCorrect });
   if (room && room.mode === "saboteur" && !iAmSaboteur) {
     setTimeout(() => renderCalloutPanel(), 500);
@@ -1951,6 +1956,7 @@ function resetPlay() {
   myId=null;myName="";roomCode="";isHost=false;myScore=0;answered=false;room=null;lastQ=-1;
   iAmSaboteur=false;mySaboteurAnswer=null;calledOut=false;
   if(typeof activePowerups!=="undefined") activePowerups={double:false};
+  myCurrentQ=0;
   if(typeof isFrozen!=="undefined") isFrozen=false;
   const _rs1=document.getElementById("shop-btn");if(_rs1)_rs1.style.display="none";
   const _rs2=document.getElementById("double-indicator");if(_rs2)_rs2.style.display="none";
@@ -2292,6 +2298,7 @@ function playerDisplayName(player) {
 
 // ── STREAKS ────────────────────────────────────────────────────────────────
 let streak = 0;
+let myCurrentQ = 0;
 
 function updateStreakDisplay() {
   const el = document.getElementById('streak-display');
@@ -2645,6 +2652,44 @@ function handlePowerupMsg(msg) {
       }
     }, 2000);
   }
+}
+
+// ── PER-PLAYER QUESTION RENDER ────────────────────────────────────────────
+function renderMyQuestion() {
+  if (!room || !room.questions) return;
+  const q = room.questions[myCurrentQ % room.questions.length];
+  answered = false;
+  stopBgMusic();
+  startBgMusic();
+
+  document.getElementById("play-q-label").textContent = "Question " + (myCurrentQ + 1);
+  const qEl = document.getElementById("play-q-text");
+  if (q.qhtml) { qEl.innerHTML = q.qhtml; } else { qEl.textContent = q.q; }
+  const imgEl = document.getElementById("play-q-image");
+  if (imgEl) {
+    const src = q.qimg || q.qimgUrl || "";
+    if (src) { imgEl.src = src; imgEl.style.display = "block"; }
+    else { imgEl.style.display = "none"; imgEl.src = ""; }
+  }
+  document.getElementById("play-score").textContent = myScore;
+  document.getElementById("q-counter").textContent = myCurrentQ + 1;
+
+  // Reset answer buttons
+  document.getElementById("play-feedback").style.display = "none";
+  document.getElementById("play-wait").style.display = "none";
+  const callPanel = document.getElementById("callout-panel");
+  if (callPanel) callPanel.style.display = "none";
+  const grid = document.getElementById("play-ans-grid");
+  grid.innerHTML = "";
+  shuffle(q.opts).forEach(opt => {
+    const b = document.createElement("button");
+    b.className = "ans-btn"; b.textContent = opt;
+    if (iAmSaboteur && opt === mySaboteurAnswer) b.classList.add("saboteur-hint");
+    b.onclick = () => submitAns(b, opt, q.a);
+    grid.appendChild(b);
+  });
+  const shopBtn = document.getElementById("shop-btn");
+  if (shopBtn) shopBtn.style.display = (room && room.mode === "powerups") ? "block" : "none";
 }
 
 connect();
